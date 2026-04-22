@@ -159,9 +159,9 @@ Deno.serve(async (req: Request) => {
       .select("id, user_id")
       .eq("event_id", event_id);
 
-    if (partError || !participants || participants.length < 2) {
+    if (partError || !participants || participants.length < 3) {
       return new Response(
-        JSON.stringify({ error: "O event precisa de pelo menos 2 participants." }),
+        JSON.stringify({ error: "O event precisa de pelo menos 3 participants." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
