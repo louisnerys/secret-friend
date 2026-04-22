@@ -79,12 +79,12 @@ graph TD
 
     %% Define Screens/Routes
     subgraph Frontend Application [Next.js PWA]
-        ScreenLogin[Login Screen <br/> /login]
-        ScreenDashboard[Dashboard Screen <br/> /dashboard]
-        ScreenNewEvent[New Event Screen <br/> /novo-evento]
-        ScreenEventDetails[Event Details Screen <br/> /evento/:id]
-        ScreenDraw[Draw Execution <br/> /evento/:id/sorteio]
-        ScreenAdmin[Admin Dashboard <br/> /admin]
+        ScreenLogin[Login Screen   /login]
+        ScreenDashboard[Dashboard Screen   /dashboard]
+        ScreenNewEvent[New Event Screen   /novo-evento]
+        ScreenEventDetails[Event Details Screen   /evento/:id]
+        ScreenDraw[Draw Execution   /evento/:id/sorteio]
+        ScreenAdmin[Admin Dashboard   /admin]
     end
 
     %% Define Backend/DB Elements
@@ -92,8 +92,8 @@ graph TD
         DB[(PostgreSQL Database)]
         RLS{Row Level Security}
         Auth[Supabase Auth]
-        EdgeDraw[Edge Function: <br/> Smart Draw Algorithm]
-        EdgeProxy[Edge Function: <br/> Anonymous Chat Proxy]
+        EdgeDraw[Edge Function:   Smart Draw Algorithm]
+        EdgeProxy[Edge Function:   Anonymous Chat Proxy]
     end
 
     %% Flows and Interactions
@@ -107,9 +107,9 @@ graph TD
     ScreenNewEvent -->|Saves Event| DB
     ScreenEventDetails -->|Sets Exclusions| DB
 
-    ScreenEventDetails -->|Triggers Draw <br/> (Creator Only)| ScreenDraw
+    ScreenEventDetails -->|Triggers Draw   (Creator Only)| ScreenDraw
     ScreenDraw -->|Calls| EdgeDraw
-    EdgeDraw -->|Bypasses RLS <br/> Calculates Pairs| DB
+    EdgeDraw -->|Bypasses RLS   Calculates Pairs| DB
 
     ScreenEventDetails -->|Sends Messages| DB
     ScreenEventDetails -->|Reads Anonymous Chat| EdgeProxy
