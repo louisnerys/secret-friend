@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -23,9 +23,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => { fetchEvents(); }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     const { data: authData } = await supabase.auth.getUser();
     if (!authData.user) { router.push('/login'); return; }
 
@@ -38,9 +36,16 @@ export default function Dashboard() {
     setProfile(userProfile || {});
 
     const { data, error } = await supabase.from('events').select('*');
-    if (!error && data) setEvents(data);
+    if (!error && data) setEvents(data as Event[]);
     setLoading(false);
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchEvents();
+    };
+    init();
+  }, [fetchEvents]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
