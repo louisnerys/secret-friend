@@ -107,7 +107,7 @@ graph TD
     ScreenNewEvent -->|Saves Event| DB
     ScreenEventDetails -->|Sets Exclusions| DB
 
-    ScreenEventDetails -->|Triggers Draw   (Creator Only)| ScreenDraw
+    ScreenEventDetails -->|Triggers Draw Creator Only| ScreenDraw
     ScreenDraw -->|Calls| EdgeDraw
     EdgeDraw -->|Bypasses RLS   Calculates Pairs| DB
 
