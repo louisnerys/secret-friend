@@ -8,6 +8,18 @@ interface DrawPageProps {
   params: Promise<{ id: string }>;
 }
 
+const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
+  <span
+    style={{
+      fontFamily: 'Material Symbols Outlined',
+      fontSize: size,
+      fontVariationSettings: fill ? "'FILL' 1" : "'FILL' 0",
+    }}
+  >
+    {children}
+  </span>
+);
+
 export default function DrawPage(props: DrawPageProps) {
   const { id } = use(props.params);
   const [myDrawn, setMyDrawn] = useState<any>(null);
@@ -15,44 +27,34 @@ export default function DrawPage(props: DrawPageProps) {
   const [activeChat, setActiveChat] = useState<'drawn' | 'drawer'>('drawn');
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [revealed, setRevealed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetchDrawAndMessages();
-    
-    // Subscribe to new private messages
+
     const channel = supabase
       .channel('private_messages_changes')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
         table: 'private_messages',
-        filter: `event_id=eq.${id}`
-      }, (payload) => {
-        // Na prática, ideal seria usar a Edge Function para evitar vazamento
-        // mas para tempo real recarregamos as messages anonimizadas
-        fetchDrawAndMessages();
-      })
+        filter: `event_id=eq.${id}`,
+      }, () => { fetchDrawAndMessages(); })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [id]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const fetchDrawAndMessages = async () => {
     const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      router.push('/login');
-      return;
-    }
+    if (!user.user) { router.push('/login'); return; }
 
-    // 1. Quem eu tirei
     const { data: parts } = await supabase
       .from('participants')
       .select('drawn_id')
@@ -66,23 +68,24 @@ export default function DrawPage(props: DrawPageProps) {
         .select('name')
         .eq('id', parts.drawn_id)
         .single();
-      
       setMyDrawn(drawn);
     }
 
-    // 2. Mensagens anônimas via Edge Function
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-anonymous-messages?event_id=${id}`, {
-      headers: {
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-anonymous-messages?event_id=${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        },
       }
-    });
+    );
 
     if (res.ok) {
       const data = await res.json();
       setMessages(data.messages || []);
     }
-    
+
     setLoading(false);
   };
 
@@ -93,120 +96,175 @@ export default function DrawPage(props: DrawPageProps) {
     const text = newMessage.trim();
     setNewMessage('');
 
-    // Optimistic UI update
     const optMsg = {
       id: Date.now().toString(),
-      text: text,
-      sender_display: "Você",
+      text,
+      sender_display: 'Você',
       is_mine: true,
       chat_type: activeChat,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
     setMessages(prev => [...prev, optMsg]);
 
     const { error } = await supabase.rpc('send_anonymous_message', {
       p_event_id: id,
       p_text: text,
-      p_to_drawer: activeChat === 'drawer'
+      p_to_drawer: activeChat === 'drawer',
     });
 
-    if (error) {
-      alert("Erro ao enviar mensagem");
-      fetchDrawAndMessages(); // revert optimistic
-    }
+    if (error) { alert('Erro ao enviar mensagem'); fetchDrawAndMessages(); }
   };
 
   const filteredMessages = messages.filter(m => m.chat_type === activeChat);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 dark:bg-slate-900 transition-colors">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-16 h-16 bg-primary-200 dark:bg-primary-900/50 rounded-full mb-4"></div>
-          <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
-          <div className="text-slate-500 dark:text-slate-400 font-medium">Carregando o segredo...</div>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs animate-pulse">
+            Revelando o segredo…
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 md:px-12 py-4 flex items-center justify-between transition-colors">
-        <button 
+    <div className="min-h-screen bg-surface font-body text-on-surface flex flex-col">
+      {/* ── Top App Bar ── */}
+      <header className="shrink-0 bg-surface/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(26,28,26,0.04)] px-6 py-4 flex items-center justify-between z-50">
+        <button
           onClick={() => router.push(`/evento/${id}`)}
-          className="flex items-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-medium"
+          className="text-primary active:scale-90 transition-transform"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 mr-1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          Voltar para o Evento
+          <MSO>arrow_back</MSO>
         </button>
-        <h1 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 hidden sm:block">
-          Seu Amigo Secreto
+        <h1 className="font-display font-bold text-xl text-primary tracking-tighter">
+          Amigo Oculto
         </h1>
-        <div className="w-24 hidden sm:block"></div>{/* Spacer for center alignment */}
+        <div className="w-6" />
       </header>
 
-      <main className="p-4 md:p-8 max-w-4xl mx-auto flex flex-col gap-8 h-[calc(100vh-80px)]">
-        {/* Reveal Card */}
-        <div className="bg-gradient-to-br from-indigo-500 to-primary-600 dark:from-indigo-900 dark:to-primary-900 rounded-3xl p-8 md:p-12 text-center text-white shadow-xl flex-none relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-white opacity-10 rounded-full blur-xl"></div>
-          
-          <p className="text-indigo-100 font-medium tracking-wide uppercase text-sm mb-3">Você tirou:</p>
-          <h2 className="text-4xl md:text-5xl font-extrabold drop-shadow-md tracking-tight">
-            {myDrawn?.name || '???'}
-          </h2>
+      <main className="flex-1 flex flex-col px-5 pb-6 gap-6 min-h-0 max-w-xl mx-auto w-full">
+
+        {/* ── Reveal Card ── */}
+        <div className="shrink-0 relative mt-4 rounded-2xl overflow-hidden">
+          {/* Luxury background */}
+          <div className="absolute inset-0 luxury-gradient opacity-95" />
+          <div className="absolute -top-8 -right-8 w-36 h-36 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/10 rounded-full blur-xl" />
+          {/* Decorative star */}
+          <span
+            className="absolute top-4 right-5 text-white/20 pointer-events-none"
+            style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+          >
+            star
+          </span>
+
+          <div className="relative z-10 p-8 text-center">
+            <p className="text-on-primary/70 font-label uppercase tracking-[0.15em] text-[10px] font-bold mb-3">
+              Você tirou
+            </p>
+
+            {revealed ? (
+              <h2 className="text-4xl font-display font-extrabold text-on-primary tracking-tight drop-shadow-sm animate-[fadeIn_0.4s_ease]">
+                {myDrawn?.name || '???'}
+              </h2>
+            ) : (
+              <button
+                onClick={() => setRevealed(true)}
+                className="group inline-flex items-center gap-3 bg-white/15 hover:bg-white/25 active:scale-95 transition-all rounded-full px-7 py-3.5 text-on-primary font-bold text-lg border border-white/20 shadow-inner"
+              >
+                <MSO size={20}>visibility</MSO>
+                Revelar Nome
+              </button>
+            )}
+
+            {revealed && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => setRevealed(false)}
+                  className="text-on-primary/50 text-xs font-bold uppercase tracking-widest hover:text-on-primary/80 transition-colors"
+                >
+                  Ocultar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Chat Section */}
-        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-sm flex flex-col flex-1 min-h-0 transition-colors">
-          <div className="p-5 md:p-6 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-indigo-500 dark:text-indigo-400">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-              </svg>
-              Chat Anônimo
-            </h3>
-            
-            <div className="mt-4 flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl">
+        {/* ── Chat Section ── */}
+        <section className="flex-1 flex flex-col min-h-0 bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden border border-outline-variant/10">
+
+          {/* Tab header */}
+          <div className="shrink-0 px-5 pt-5 pb-4 border-b border-outline-variant/10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-primary flex items-center gap-2">
+                <MSO fill size={20}>chat</MSO>
+                Chat Anônimo
+              </h3>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container px-2 py-1 rounded-full">
+                Identidade oculta
+              </span>
+            </div>
+
+            {/* Pill tab switcher */}
+            <div className="flex bg-surface-container rounded-full p-1 gap-1">
               <button
                 onClick={() => setActiveChat('drawn')}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${activeChat === 'drawn' ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                className={`flex-1 py-2 text-xs font-bold rounded-full transition-all duration-200 ${
+                  activeChat === 'drawn'
+                    ? 'bg-primary text-on-primary shadow'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
               >
-                Com meu Amigo Secreto
+                Meu Amigo Secreto
               </button>
               <button
                 onClick={() => setActiveChat('drawer')}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${activeChat === 'drawer' ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                className={`flex-1 py-2 text-xs font-bold rounded-full transition-all duration-200 ${
+                  activeChat === 'drawer'
+                    ? 'bg-primary text-on-primary shadow'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
               >
-                Com quem me tirou
+                Quem me tirou
               </button>
             </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
+
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-surface-container/30">
             {filteredMessages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-16 h-16 mb-4 opacity-50">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                </svg>
-                <p>Nenhuma mensagem ainda.</p>
-                <p className="text-sm mt-1">Mande a primeira mensagem anônima!</p>
+              <div className="h-full flex flex-col items-center justify-center gap-3 py-12">
+                <span
+                  className="text-secondary-container"
+                  style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+                >
+                  forum
+                </span>
+                <p className="font-display font-bold text-on-surface-variant">Nenhuma mensagem ainda</p>
+                <p className="text-xs text-on-surface-variant/60 text-center max-w-[180px]">
+                  Mande a primeira mensagem anônima!
+                </p>
               </div>
             ) : (
               filteredMessages.map(msg => (
                 <div key={msg.id} className={`flex ${msg.is_mine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-3 ${
-                    msg.is_mine 
-                      ? 'bg-indigo-600 text-white rounded-br-sm shadow-sm' 
-                      : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded-bl-sm shadow-sm'
-                  }`}>
-                    <span className={`block text-xs font-semibold mb-1 ${msg.is_mine ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                      msg.is_mine
+                        ? 'luxury-gradient text-on-primary rounded-br-sm'
+                        : 'bg-surface-container border border-outline-variant/20 text-on-surface rounded-bl-sm'
+                    }`}
+                  >
+                    <span className={`block text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                      msg.is_mine ? 'text-on-primary/60' : 'text-on-surface-variant/70'
+                    }`}>
                       {msg.sender_display}
                     </span>
-                    <p className="leading-relaxed">{msg.text}</p>
+                    <p className="leading-relaxed text-sm">{msg.text}</p>
                   </div>
                 </div>
               ))
@@ -214,27 +272,28 @@ export default function DrawPage(props: DrawPageProps) {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-4 md:p-5 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-b-3xl">
-            <form onSubmit={handleSendMessage} className="flex gap-3">
-              <input 
-                type="text" 
+          {/* Input bar */}
+          <form
+            onSubmit={handleSendMessage}
+            className="shrink-0 flex gap-3 p-4 border-t border-outline-variant/10 bg-surface"
+          >
+            <div className="relative flex-1 group">
+              <input
+                type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Envie uma mensagem (sua identidade será ocultada)..." 
-                className="flex-1 px-5 py-3.5 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white transition-colors"
+                placeholder="Mensagem anônima…"
+                className="w-full bg-surface-container-highest border-none rounded-full px-5 py-3 text-sm focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 text-on-surface"
               />
-              <button 
-                type="submit" 
-                disabled={!newMessage.trim()}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3.5 px-6 md:px-8 rounded-xl shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-none"
-              >
-                <span className="hidden sm:inline">Enviar</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:hidden">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
-              </button>
-            </form>
-          </div>
+            </div>
+            <button
+              type="submit"
+              disabled={!newMessage.trim()}
+              className="w-12 h-12 rounded-full luxury-gradient text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+            >
+              <MSO size={20}>send</MSO>
+            </button>
+          </form>
         </section>
       </main>
     </div>
