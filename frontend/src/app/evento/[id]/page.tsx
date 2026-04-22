@@ -8,6 +8,18 @@ interface EventPageProps {
   params: Promise<{ id: string }>;
 }
 
+const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
+  <span
+    style={{
+      fontFamily: 'Material Symbols Outlined',
+      fontSize: size,
+      fontVariationSettings: fill ? "'FILL' 1" : "'FILL' 0",
+    }}
+  >
+    {children}
+  </span>
+);
+
 export default function EventDetalhes(props: EventPageProps) {
   const { id } = use(props.params);
   const [event, setEvent] = useState<any>(null);
@@ -19,33 +31,23 @@ export default function EventDetalhes(props: EventPageProps) {
   const [user, setUser] = useState<any>(null);
   const [myWishlist, setMyWishlist] = useState('');
   const [isEditingWishlist, setIsEditingWishlist] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
+  useEffect(() => { fetchData(); }, [id]);
 
   const fetchData = async () => {
     const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) {
-      router.push('/login?redirect=/evento/' + id);
-      return;
-    }
+    if (!authData.user) { router.push('/login?redirect=/evento/' + id); return; }
     setUser(authData.user);
 
-    // Fetch event using RPC to bypass RLS for users who have the link
     const { data: eventData, error: eventError } = await supabase
       .rpc('get_public_event', { p_id: id })
       .maybeSingle();
 
-    if (eventError || !eventData) {
-      alert('Evento não encontrado');
-      router.push('/dashboard');
-      return;
-    }
+    if (eventError || !eventData) { alert('Evento não encontrado'); router.push('/dashboard'); return; }
     setEvent(eventData);
 
-    // Fetch participants (from security view vw_participants)
     const { data: parts } = await supabase
       .from('vw_participants')
       .select('user_id, drawn_id, wishlist, users(name)')
@@ -53,14 +55,11 @@ export default function EventDetalhes(props: EventPageProps) {
 
     if (parts) {
       setParticipantes(parts);
-      const me = parts.find(p => p.user_id === authData.user.id);
+      const me = parts.find(p => p.user_id === authData.user!.id);
       setIsParticipant(!!me);
-      if (me && me.wishlist) {
-        setMyWishlist(me.wishlist);
-      }
+      if (me?.wishlist) setMyWishlist(me.wishlist);
     }
 
-    // Fetch mural
     const { data: mMsgs } = await supabase
       .from('messages')
       .select('id, text, reactions, users(name)')
@@ -68,41 +67,22 @@ export default function EventDetalhes(props: EventPageProps) {
       .order('created_at', { ascending: true });
 
     if (mMsgs) setMuralMsgs(mMsgs);
-
     setLoading(false);
   };
 
   const handleJoin = async () => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from('participants')
-      .insert({ event_id: id, user_id: user.id, wishlist: '' });
-
-    if (!error) {
-      fetchData(); // Refresh
-      setIsEditingWishlist(true); // Open wishlist editor automatically
-    } else {
-      alert('Erro ao entrar no evento: ' + error.message);
-    }
+    const { error } = await supabase.from('participants').insert({ event_id: id, user_id: user.id, wishlist: '' });
+    if (!error) { fetchData(); setIsEditingWishlist(true); }
+    else alert('Erro ao entrar no evento: ' + error.message);
   };
 
   const handleSaveWishlist = async () => {
     if (!user) return;
     setLoading(true);
-    
-    const { error } = await supabase
-      .from('participants')
-      .update({ wishlist: myWishlist })
-      .eq('event_id', id)
-      .eq('user_id', user.id);
-      
-    if (!error) {
-      setIsEditingWishlist(false);
-      fetchData();
-    } else {
-      alert('Erro ao salvar lista de desejos: ' + error.message);
-    }
+    const { error } = await supabase.from('participants').update({ wishlist: myWishlist }).eq('event_id', id).eq('user_id', user.id);
+    if (!error) { setIsEditingWishlist(false); fetchData(); }
+    else alert('Erro ao salvar lista de desejos: ' + error.message);
     setLoading(false);
   };
 
@@ -112,15 +92,13 @@ export default function EventDetalhes(props: EventPageProps) {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ event_id: id }),
     });
 
-    if (res.ok) {
-      alert('Sorteio realizado com sucesso!');
-      fetchData();
-    } else {
+    if (res.ok) { alert('Sorteio realizado com sucesso!'); fetchData(); }
+    else {
       const data = await res.json().catch(() => ({}));
       alert('Erro no sorteio: ' + (data.error || data.message || 'Erro desconhecido.'));
     }
@@ -130,244 +108,322 @@ export default function EventDetalhes(props: EventPageProps) {
   const handleSendMuralMsg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMuralMsg.trim()) return;
-
     const text = newMuralMsg.trim();
     setNewMuralMsg('');
-
-    // Optimistic UI for sending
-    const optMsg = {
-      id: Date.now().toString(),
-      text: text,
-      reactions: {},
-      users: { name: user?.user_metadata?.name || 'Você' },
-    };
+    const optMsg = { id: Date.now().toString(), text, reactions: {}, users: { name: user?.user_metadata?.name || 'Você' } };
     setMuralMsgs(prev => [...prev, optMsg]);
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({ event_id: id, sender_id: user?.id, text: text, reactions: {} });
-
-    if (error) fetchData(); // rollback if error
-    else fetchData(); // refresh for real ID
+    const { error } = await supabase.from('messages').insert({ event_id: id, sender_id: user?.id, text, reactions: {} });
+    if (error) fetchData();
+    else fetchData();
   };
 
   const handleToggleLike = async (msgId: string) => {
     if (!user) return;
     const userId = user.id;
-
-    // Optimistic Update
     setMuralMsgs(prev => prev.map(msg => {
-      if (msg.id === msgId) {
-        const reacts = { ...(msg.reactions || {}) };
-        if (reacts[userId]) {
-          delete reacts[userId]; // unlike
-        } else {
-          reacts[userId] = '👍'; // like
-        }
-        return { ...msg, reactions: reacts };
-      }
-      return msg;
+      if (msg.id !== msgId) return msg;
+      const reacts = { ...(msg.reactions || {}) };
+      if (reacts[userId]) delete reacts[userId]; else reacts[userId] = '👍';
+      return { ...msg, reactions: reacts };
     }));
-
-    // Update DB (Fetch current first to avoid race condition)
     const { data: currMsg } = await supabase.from('messages').select('reactions').eq('id', msgId).single();
     if (currMsg) {
       const reacts = { ...(currMsg.reactions || {}) };
-      if (reacts[userId]) delete reacts[userId];
-      else reacts[userId] = '👍';
-      
+      if (reacts[userId]) delete reacts[userId]; else reacts[userId] = '👍';
       await supabase.from('messages').update({ reactions: reacts }).eq('id', msgId);
     }
   };
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 md:p-12 flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 bg-slate-200 dark:bg-slate-800 rounded-full mb-4"></div>
-          <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs">Carregando…</p>
         </div>
       </div>
     );
   }
 
   const isCreator = event?.creator_id === user?.id;
+  const dateLabel = event?.reveal_date
+    ? new Date(event.reveal_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+    : null;
+
+  const statusBg: Record<string, string> = {
+    open: 'bg-secondary-container/20 text-secondary',
+    drawn: 'bg-primary-container/20 text-primary',
+    closed: 'bg-surface-container-highest text-on-surface-variant',
+  };
+  const statusLabel: Record<string, string> = { open: 'Aberto', drawn: 'Sorteado', closed: 'Encerrado' };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 md:px-12 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors">
-        <div className="flex items-center">
-          <button 
-            onClick={() => router.push('/dashboard')} 
-            className="flex items-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors mr-4"
+    <div className="min-h-screen bg-surface font-body text-on-surface pb-32">
+      {/* ── Top App Bar ── */}
+      <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_8px_24px_rgba(26,28,26,0.06)] flex items-center justify-between px-6 py-4 transition-colors">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-primary active:scale-90 transition-transform"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 mr-1">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Voltar
+            <MSO>arrow_back</MSO>
           </button>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{event.name}</h1>
+          <div className="flex flex-col">
+            <h1 className="font-headline tracking-tighter text-xl font-bold text-primary leading-none">
+              {event.name}
+            </h1>
+            {dateLabel && (
+              <span className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+                {dateLabel}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${event.status === 'aberto' || event.status === 'open' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
-            {event.status?.toUpperCase() || 'ABERTO'}
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${statusBg[event.status] || statusBg.open}`}>
+            {statusLabel[event.status] || event.status}
           </span>
-          <button 
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-              alert('Link copiado!');
-            }}
-            className="px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-1"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-            </svg>
-            Copiar Link
+          <button onClick={handleCopyLink} className="text-on-surface-variant hover:text-primary transition-colors" title="Copiar link">
+            <MSO>{copySuccess ? 'check_circle' : 'link'}</MSO>
           </button>
         </div>
       </header>
 
-      <main className="p-6 md:p-12 max-w-7xl mx-auto space-y-6">
-        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-sm transition-colors">
-          <p className="text-slate-600 dark:text-slate-300 mb-4 whitespace-pre-wrap">{event.description}</p>
-          {event.reveal_date && (
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              <strong className="text-slate-700 dark:text-slate-200">Data de Revelação:</strong> {new Date(event.reveal_date).toLocaleDateString()}
-            </p>
-          )}
+      <main className="mt-24 px-6 max-w-2xl mx-auto space-y-8">
+        {/* Event Info */}
+        <section className="relative bg-surface-container-low rounded-xl p-8 overflow-hidden border-t-2 border-secondary/20">
+          <div className="absolute top-4 right-4 text-secondary-container/30">
+            <MSO fill size={36}>auto_awesome</MSO>
+          </div>
+          <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">{event.description}</p>
         </section>
 
+        {/* Reveal / Draw section */}
+        {isParticipant && event.status === 'drawn' && (
+          <section className="bg-surface-container-low rounded-xl p-8 relative overflow-hidden border-t-2 border-secondary/20">
+            <div className="absolute top-4 right-4 text-secondary-container/30">
+              <MSO fill size={36}>auto_awesome</MSO>
+            </div>
+            <div className="space-y-6 relative z-10">
+              <h2 className="font-headline text-2xl tracking-tight text-primary">Seu Amigo Oculto é…</h2>
+              <button
+                onClick={() => router.push(`/evento/${id}/draw`)}
+                className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-4 rounded-full font-bold shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:opacity-90 transition-opacity flex items-center gap-3"
+              >
+                <MSO>visibility</MSO>
+                Revelar Nome
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Wishlist */}
         {isParticipant && event.status === 'open' && (
-          <section className="bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/30 rounded-3xl p-6 md:p-8 shadow-sm transition-colors">
-            <h3 className="text-lg font-bold text-primary-900 dark:text-primary-300 mb-4 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-              </svg>
-              Sua Lista de Desejos
-            </h3>
+          <section className="space-y-4">
+            <div className="flex justify-between items-end">
+              <h2 className="font-headline text-xl text-primary">Minha Lista de Desejos</h2>
+              {!isEditingWishlist && (
+                <button
+                  onClick={() => setIsEditingWishlist(true)}
+                  className="text-primary font-bold text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
+                >
+                  <MSO size={18}>{myWishlist ? 'edit' : 'add_circle'}</MSO>
+                  {myWishlist ? 'Editar' : 'Adicionar Item'}
+                </button>
+              )}
+            </div>
             {isEditingWishlist ? (
               <div className="space-y-4">
-                <textarea 
-                  value={myWishlist}
-                  onChange={(e) => setMyWishlist(e.target.value)}
-                  placeholder="O que você gostaria de ganhar?"
-                  rows={3}
-                  className="w-full px-4 py-3 border border-primary-200 dark:border-primary-800/50 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-colors resize-y shadow-sm"
-                />
+                <div className="relative group">
+                  <textarea
+                    value={myWishlist}
+                    onChange={(e) => setMyWishlist(e.target.value)}
+                    placeholder="O que você gostaria de ganhar?"
+                    rows={3}
+                    className="w-full bg-surface-container-highest border-none rounded-lg px-4 py-4 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 resize-none text-on-surface"
+                  />
+                  <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary transition-all duration-500 group-focus-within:w-full" />
+                </div>
                 <div className="flex gap-3">
-                  <button onClick={handleSaveWishlist} className="bg-primary-600 hover:bg-primary-500 text-white font-medium py-2 px-6 rounded-lg transition-colors">Salvar</button>
-                  <button onClick={() => setIsEditingWishlist(false)} className="bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-medium py-2 px-6 rounded-lg transition-colors">Cancelar</button>
+                  <button onClick={handleSaveWishlist} className="luxury-gradient text-on-primary font-bold py-2.5 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)]">
+                    Salvar
+                  </button>
+                  <button onClick={() => setIsEditingWishlist(false)} className="text-on-surface-variant font-medium py-2.5 px-6 rounded-full border border-outline-variant hover:bg-surface-container">
+                    Cancelar
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl border border-primary-100 dark:border-primary-900/30">
-                <p className={`flex-1 ${myWishlist ? 'text-slate-700 dark:text-slate-300' : 'italic text-slate-400 dark:text-slate-500'}`}>
-                  {myWishlist || 'Você ainda não definiu sua lista de desejos. Ajude o seu amigo secreto!'}
-                </p>
-                <button onClick={() => setIsEditingWishlist(true)} className="flex-none bg-primary-100 hover:bg-primary-200 text-primary-700 dark:bg-primary-900/40 dark:hover:bg-primary-900/60 dark:text-primary-300 font-medium py-2 px-4 rounded-lg transition-colors">
-                  {myWishlist ? 'Editar Lista' : 'Criar Lista'}
-                </button>
+              <div className="grid grid-cols-1 gap-4">
+                {myWishlist ? (
+                  myWishlist.split('\n').filter(Boolean).map((item, i) => (
+                    <div key={i} className="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between shadow-sm border-l-4 border-secondary">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center">
+                          <MSO size={18}>card_giftcard</MSO>
+                        </div>
+                        <p className="font-bold text-on-surface">{item}</p>
+                      </div>
+                      <MSO size={20}>more_vert</MSO>
+                    </div>
+                  ))
+                ) : (
+                  <p className="italic text-on-surface-variant text-sm p-4 bg-surface-container-low rounded-xl">
+                    Você ainda não definiu sua lista de desejos. Ajude o seu amigo secreto!
+                  </p>
+                )}
               </div>
             )}
           </section>
         )}
 
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-4 md:p-6 shadow-sm flex flex-wrap gap-4 items-center justify-between transition-colors">
+        {/* Actions bar */}
+        <div className="flex flex-wrap gap-3 items-center">
           {!isParticipant && event.status === 'open' && (
-            <button onClick={handleJoin} className="bg-primary-600 hover:bg-primary-500 text-white font-semibold py-3 px-6 rounded-xl shadow transition-colors flex-1 md:flex-none">
+            <button
+              onClick={handleJoin}
+              className="luxury-gradient text-on-primary font-bold py-4 px-8 rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:shadow-[0_12px_32px_rgba(122,0,26,0.3)] transition-all flex items-center gap-2"
+            >
+              <MSO>person_add</MSO>
               Participar do Evento
             </button>
           )}
 
           {isCreator && event.status === 'open' && (
-            <button 
-              onClick={handleDraw} 
+            <button
+              onClick={handleDraw}
               disabled={participants.length < 3}
               title={participants.length < 3 ? 'É necessário pelo menos 3 participantes' : 'Realizar o sorteio agora'}
-              className={`font-semibold py-3 px-6 rounded-xl shadow transition-all flex-1 md:flex-none ${participants.length < 3 ? 'bg-amber-100 text-amber-500 dark:bg-amber-900/20 dark:text-amber-700 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-400 text-white cursor-pointer'}`}
+              className={`w-full bg-surface-container-highest border-2 border-secondary/30 text-primary p-6 rounded-2xl flex items-center justify-between group transition-all ${participants.length < 3 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary-fixed'}`}
             >
-              {participants.length < 3 ? 'Precisa de 3+ Participantes' : 'Realizar Sorteio Inteligente'}
+              <div className="text-left">
+                <p className="font-headline text-xl">Realizar Sorteio</p>
+                <p className="text-sm font-body text-on-surface-variant">
+                  {participants.length < 3
+                    ? `${participants.length}/3 participantes (mínimo 3)`
+                    : 'Esta ação não pode ser desfeita'}
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <MSO>casino</MSO>
+              </div>
             </button>
           )}
-
-          {isParticipant && event.status === 'drawn' && (
-            <button onClick={() => router.push(`/evento/${id}/draw`)} className="bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white font-semibold py-3 px-6 rounded-xl shadow transition-all flex-1 md:flex-none">
-              Ver Meu Amigo Secreto
-            </button>
-          )}
-          
-          <div className="text-sm text-slate-500 dark:text-slate-400 flex-1 md:flex-none text-right">
-            Status atual: <span className="font-semibold text-slate-700 dark:text-slate-300">{event.status === 'open' ? 'Aguardando Sorteio' : 'Sorteio Realizado'}</span>
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm transition-colors lg:col-span-1 h-fit">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center justify-between">
-              Participantes 
-              <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm py-1 px-3 rounded-full">{participants.length}</span>
-            </h2>
-            <ul className="space-y-3">
-              {participants.map(p => (
-                <li key={p.user_id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/40 dark:to-primary-800/40 text-primary-700 dark:text-primary-300 flex items-center justify-center font-bold shadow-sm border border-primary-200 dark:border-primary-700/50">
-                    {p.users?.name?.charAt(0).toUpperCase()}
+        {/* Participants */}
+        <section className="space-y-4">
+          <h2 className="font-headline text-2xl text-primary">Participantes</h2>
+          <div className="flex overflow-x-auto pb-4 gap-4" style={{ scrollbarWidth: 'none' }}>
+            {participants.map((p) => (
+              <div key={p.user_id} className="flex-shrink-0 flex flex-col items-center gap-2">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-container to-secondary-container flex items-center justify-center font-display font-bold text-on-primary-container text-xl border-2 border-surface shadow-md">
+                    {p.users?.name?.charAt(0)?.toUpperCase()}
                   </div>
-                  <span className="font-medium text-slate-700 dark:text-slate-200">{p.users?.name}</span>
-                </li>
-              ))}
-            </ul>
+                  <div className="absolute -bottom-1 -right-1 bg-secondary w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface">
+                    <MSO size={10}>check</MSO>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-on-surface">{p.users?.name?.split(' ')[0]}</span>
+              </div>
+            ))}
+            {isCreator && event.status === 'open' && (
+              <button
+                onClick={() => handleCopyLink()}
+                className="flex-shrink-0 w-16 h-16 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors"
+              >
+                <MSO>person_add</MSO>
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* Mural */}
+        {isParticipant && (
+          <section className="space-y-4 pb-8">
+            <h2 className="font-headline text-2xl text-primary">Mural do Evento</h2>
+            <div className="space-y-3">
+              {muralMsgs.map(msg => {
+                const reacts = msg.reactions || {};
+                const isLiked = user ? !!reacts[user.id] : false;
+                const totalLikes = Object.keys(reacts).length;
+                return (
+                  <div key={msg.id} className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border-l-4 border-secondary">
+                    <span className="font-bold text-sm text-primary block mb-1">{msg.users?.name}</span>
+                    <p className="text-on-surface mb-3 leading-relaxed">{msg.text}</p>
+                    <button
+                      onClick={() => handleToggleLike(msg.id)}
+                      className={`text-sm py-1.5 px-3 rounded-full border transition-colors flex items-center gap-1.5 ${isLiked ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high'}`}
+                    >
+                      <span>👍</span>
+                      {totalLikes > 0 && <span className="font-medium">{totalLikes}</span>}
+                    </button>
+                  </div>
+                );
+              })}
+              {muralMsgs.length === 0 && (
+                <p className="italic text-on-surface-variant text-sm text-center py-8">
+                  Seja o primeiro a deixar uma mensagem no mural!
+                </p>
+              )}
+            </div>
+
+            <form onSubmit={handleSendMuralMsg} className="flex gap-3 mt-4">
+              <div className="relative group flex-1">
+                <input
+                  type="text"
+                  value={newMuralMsg}
+                  onChange={e => setNewMuralMsg(e.target.value)}
+                  placeholder="Escreva no mural…"
+                  className="w-full bg-surface-container-highest border-none rounded-full px-5 py-3 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 text-on-surface"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!newMuralMsg.trim()}
+                className="luxury-gradient text-on-primary font-bold py-3 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <MSO>send</MSO>
+              </button>
+            </form>
           </section>
-
-          {isParticipant && (
-            <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-sm transition-colors lg:col-span-2 flex flex-col h-[600px]">
-              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Mural do Evento</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Deixe uma mensagem para o grupo!</p>
-              </div>
-              
-              <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/50 dark:bg-slate-800/50">
-                {muralMsgs.map(msg => {
-                  const reacts = msg.reactions || {};
-                  const isLiked = user ? !!reacts[user.id] : false;
-                  const totalLikes = Object.keys(reacts).length;
-
-                  return (
-                    <div key={msg.id} className="bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-4 shadow-sm">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold text-sm text-primary-700 dark:text-primary-300">{msg.users?.name}</span>
-                      </div>
-                      <p className="text-slate-700 dark:text-slate-200 mb-3">{msg.text}</p>
-                      <button 
-                        onClick={() => handleToggleLike(msg.id)} 
-                        className={`text-sm py-1 px-2.5 rounded-lg border transition-colors flex items-center gap-1 ${isLiked ? 'bg-primary-50 border-primary-200 text-primary-700 dark:bg-primary-900/30 dark:border-primary-800 dark:text-primary-300' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700'}`}
-                      >
-                        <span className="text-base">👍</span> 
-                        {totalLikes > 0 && <span className="font-medium">{totalLikes}</span>}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-b-3xl">
-                <form onSubmit={handleSendMuralMsg} className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={newMuralMsg} 
-                    onChange={e => setNewMuralMsg(e.target.value)} 
-                    placeholder="Escreva no mural..." 
-                    className="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white transition-colors" 
-                  />
-                  <button type="submit" disabled={!newMuralMsg.trim()} className="bg-primary-600 hover:bg-primary-500 text-white font-semibold py-3 px-6 rounded-xl shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    Enviar
-                  </button>
-                </form>
-              </div>
-            </section>
-          )}
-        </div>
+        )}
       </main>
+
+      {/* ── Bottom Nav ── */}
+      <nav className="fixed bottom-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-lg flex justify-around items-center px-4 pb-6 pt-2 shadow-[0_-8px_24px_rgba(26,28,26,0.04)] rounded-t-3xl transition-colors">
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-full p-3 transition-all"
+        >
+          <MSO fill>event</MSO>
+          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">Eventos</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors">
+          <MSO>card_giftcard</MSO>
+          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">Lista</span>
+        </button>
+        {isParticipant && event.status === 'drawn' && (
+          <button
+            onClick={() => router.push(`/evento/${id}/draw`)}
+            className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors"
+          >
+            <MSO>auto_awesome</MSO>
+            <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">Sorteio</span>
+          </button>
+        )}
+        <button className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors">
+          <MSO>person</MSO>
+          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">Perfil</span>
+        </button>
+      </nav>
     </div>
   );
 }

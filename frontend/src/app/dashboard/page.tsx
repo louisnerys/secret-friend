@@ -9,42 +9,36 @@ interface Event {
   name: string;
   description: string;
   status: string;
+  reveal_date?: string;
+}
+
+interface UserProfile {
+  name?: string;
+  is_admin?: boolean;
 }
 
 export default function Dashboard() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [profile, setProfile] = useState<UserProfile>({});
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  useEffect(() => { fetchEvents(); }, []);
 
   const fetchEvents = async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      router.push('/login');
-      return;
-    }
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) { router.push('/login'); return; }
 
     const { data: userProfile } = await supabase
       .from('users')
-      .select('is_admin')
-      .eq('id', user.user.id)
+      .select('name, is_admin')
+      .eq('id', authData.user.id)
       .single();
 
-    if (userProfile?.is_admin) {
-      setIsAdmin(true);
-    }
+    setProfile(userProfile || {});
 
-    const { data, error } = await supabase
-      .from('events')
-      .select('*');
-
-    if (!error && data) {
-      setEvents(data);
-    }
+    const { data, error } = await supabase.from('events').select('*');
+    if (!error && data) setEvents(data);
     setLoading(false);
   };
 
@@ -53,75 +47,206 @@ export default function Dashboard() {
     router.push('/login');
   };
 
+  const firstName = profile.name?.split(' ')[0] || 'Amigo';
+
+  const statusLabel: Record<string, string> = {
+    open: 'Aberto',
+    drawn: 'Sorteado',
+    closed: 'Encerrado',
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 md:p-12 transition-colors">
-        <div className="h-10 w-48 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-8" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
-          ))}
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs">
+            Carregando…
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 md:px-12 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Meus Eventos</h1>
-        <div className="flex items-center gap-3">
-          {isAdmin && (
-            <button onClick={() => router.push('/admin')} className="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50 rounded-lg transition-colors">
-              Admin Panel
+    <div className="min-h-screen bg-surface font-body text-on-surface pb-32">
+      {/* ── Top App Bar ── */}
+      <header className="bg-surface/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-sm shadow-black/5">
+        <div className="flex items-center justify-between px-6 py-4 max-w-screen-xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-display font-bold text-sm">
+              {firstName[0]}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tighter text-primary font-display">
+              A Celebração
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            {profile.is_admin && (
+              <button
+                onClick={() => router.push('/admin')}
+                className="text-xs font-bold uppercase tracking-widest text-secondary bg-secondary-container/30 px-3 py-1.5 rounded-full"
+              >
+                Admin
+              </button>
+            )}
+            <button
+              onClick={handleLogout}
+              className="text-on-surface-variant hover:text-primary transition-colors"
+              title="Sair"
+            >
+              <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22 }}>logout</span>
             </button>
-          )}
-          <button onClick={() => router.push('/novo-evento')} className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-500 rounded-lg shadow transition-colors">
-            + Novo Evento
-          </button>
-          <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-lg transition-colors">
-            Sair
-          </button>
+          </div>
         </div>
       </header>
 
-      <main className="p-6 md:p-12 max-w-7xl mx-auto">
-        {events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
-              <span className="text-2xl">🎁</span>
-            </div>
-            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">Nenhum evento encontrado</h2>
-            <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">Você ainda não participa de nenhum evento de Amigo Oculto. Crie um novo evento ou aguarde um convite.</p>
-            <button onClick={() => router.push('/novo-evento')} className="px-6 py-2.5 font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/40 rounded-lg transition-colors">
-              Criar meu primeiro evento
-            </button>
+      <main className="mt-24 px-6 max-w-screen-xl mx-auto space-y-10">
+        {/* Welcome */}
+        <section className="relative pt-4 overflow-hidden">
+          <div className="flex flex-col gap-2">
+            <p className="text-secondary font-label uppercase tracking-widest text-[10px] font-bold">
+              Bem-vindo(a)
+            </p>
+            <h2 className="text-4xl font-display font-bold text-on-surface leading-tight tracking-tight">
+              Olá, {firstName}!{' '}
+              <span className="text-primary">Que a alegria comece.</span>
+            </h2>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <div 
-                key={event.id} 
-                onClick={() => router.push(`/evento/${event.id}`)}
-                className="group flex flex-col justify-between bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all hover:-translate-y-1"
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-secondary-container/20 rounded-full blur-3xl" />
+        </section>
+
+        {/* CTA */}
+        <section>
+          <button
+            onClick={() => router.push('/novo-evento')}
+            className="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary py-5 px-8 rounded-full shadow-lg shadow-primary/10 flex items-center justify-center gap-3 active:scale-95 transition-all duration-300 font-display font-bold text-lg group"
+          >
+            <span
+              className="transition-transform group-hover:rotate-90"
+              style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22 }}
+            >
+              add
+            </span>
+            Criar Novo Evento
+          </button>
+        </section>
+
+        {/* My Events */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-display font-bold text-on-surface">Meus Eventos</h3>
+          </div>
+
+          {events.length === 0 ? (
+            <div className="bg-surface-container-low rounded-2xl p-10 text-center space-y-4">
+              <span
+                className="text-secondary-container"
+                style={{ fontFamily: 'Material Symbols Outlined', fontSize: 56, fontVariationSettings: "'FILL' 1" }}
               >
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{event.name}</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-3 mb-4">{event.description}</p>
+                celebration
+              </span>
+              <h4 className="font-display text-xl font-bold text-on-surface">Nenhum evento ainda</h4>
+              <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
+                Crie seu primeiro evento ou aguarde um convite para participar.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {events.map((event) => (
+                <div
+                  key={event.id}
+                  onClick={() => router.push(`/evento/${event.id}`)}
+                  className="bg-surface-container-lowest rounded-xl p-6 shadow-sm shadow-black/5 relative overflow-hidden group border-l-4 border-secondary cursor-pointer hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-display font-bold text-primary group-hover:text-primary-container transition-colors">
+                        {event.name}
+                      </h4>
+                      {event.reveal_date && (
+                        <p className="text-on-surface-variant text-sm font-medium">
+                          {new Date(event.reveal_date).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short',
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    <span className="bg-tertiary-container/20 text-tertiary px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                      {statusLabel[event.status] || event.status}
+                    </span>
+                  </div>
+                  <p className="text-on-surface-variant text-sm line-clamp-2 mb-6">{event.description}</p>
+                  <div className="flex items-center justify-end">
+                    <span
+                      className="text-outline-variant group-hover:translate-x-1 transition-transform"
+                      style={{ fontFamily: 'Material Symbols Outlined', fontSize: 20 }}
+                    >
+                      arrow_forward
+                    </span>
+                  </div>
+                  {/* Decorative */}
+                  <span
+                    className="absolute -top-2 -right-2 text-secondary-container/20 select-none"
+                    style={{ fontFamily: 'Material Symbols Outlined', fontSize: 56, fontVariationSettings: "'FILL' 1" }}
+                  >
+                    star
+                  </span>
                 </div>
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${event.status === 'aberto' || event.status === 'open' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
-                    {event.status?.toUpperCase() || 'ABERTO'}
-                  </span>
-                  <span className="text-primary-600 dark:text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Ver detalhes →
-                  </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Gift Inspiration */}
+        <section className="pb-4">
+          <h3 className="text-xl font-display font-bold text-on-surface mb-6">Inspiração de Presentes</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6" style={{ scrollbarWidth: 'none' }}>
+            {[
+              { label: 'Guia 2024', name: 'Vinhos & Queijos', emoji: '🍷' },
+              { label: 'Minimalista', name: 'Papelaria Fina', emoji: '📓' },
+              { label: 'Executivo', name: 'Acessórios Tech', emoji: '⌚' },
+              { label: 'Gourmet', name: 'Cesta Artesanal', emoji: '🧺' },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className="flex-shrink-0 w-40 bg-surface-container-low rounded-2xl overflow-hidden shadow-none cursor-pointer hover:shadow-md transition-all"
+              >
+                <div className="w-full h-32 bg-gradient-to-br from-secondary-container/40 to-primary-container/20 flex items-center justify-center text-5xl">
+                  {item.emoji}
+                </div>
+                <div className="p-3">
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{item.label}</p>
+                  <p className="text-sm font-semibold text-primary">{item.name}</p>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </section>
       </main>
+
+      {/* ── Bottom Nav ── */}
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-surface/90 backdrop-blur-2xl z-50 rounded-t-3xl shadow-[0_-8px_24px_rgba(26,28,26,0.06)]">
+        <div className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-5 py-2 transition-all duration-300">
+          <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22, fontVariationSettings: "'FILL' 1" }}>celebration</span>
+          <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">Events</span>
+        </div>
+        <div
+          onClick={() => router.push('/admin')}
+          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer"
+        >
+          <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22 }}>auto_awesome</span>
+          <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">Admin</span>
+        </div>
+        <div
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer"
+        >
+          <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22 }}>person</span>
+          <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">Perfil</span>
+        </div>
+      </nav>
     </div>
   );
 }
