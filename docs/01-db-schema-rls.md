@@ -2,24 +2,24 @@ Objetivo: Configurar o banco de dados PostgreSQL e as políticas de segurança d
 
 # Passo 1: Schema de Banco de Dados e Segurança RLS
 
-## Contexto
-O banco deve gerenciar usuários, eventos, sorteios e chats, garantindo o segredo absoluto através do hardware (banco de dados) [3].
+## Context
+O banco deve gerenciar usuários, events, sorteios e chats, garantindo o segredo absoluto através do hardware (banco de dados) [3].
 
 ## Tarefas do Agente
 1. Criar as seguintes tabelas no esquema `public`:
-    - `usuarios`: id (uuid, primary key), email, nome, avatar_url.
-    - `eventos`: id (uuid), criador_id (referencia usuarios), nome, data_revelacao, descricao, status (enum: 'aberto', 'sorteado', 'finalizado').
-    - `participantes`: id, evento_id, usuario_id, lista_desejos (text), sorteado_id (uuid, secreto).
-    - `exclusoes`: id, evento_id, usuario_a_id, usuario_b_id.
-    - `mensagens`: id, evento_id, remetente_id, texto, criado_em, reactions (jsonb).
-    - `mensagens_privadas`: id, evento_id, remetente_id, destinatario_id, texto, criado_em.
+    - `users`: id (uuid, primary key), email, nome, avatar_url.
+    - `events`: id (uuid), creator_id (referencia users), nome, reveal_date, description, status (enum: 'open', 'drawn', 'finished').
+    - `participants`: id, event_id, user_id, wishlist (text), drawn_id (uuid, secreto).
+    - `exclusions`: id, event_id, user_a_id, user_b_id.
+    - `messages`: id, event_id, sender_id, text, criado_em, reactions (jsonb).
+    - `private_messages`: id, event_id, sender_id, recipient_id, text, criado_em.
 
 2. Configurar **Row Level Security (RLS)** [2, 4]:
     - Habilitar RLS em todas as tabelas.
-    - Política para `participantes`: O usuário autenticado só pode ver seu próprio `sorteado_id` [5].
-    - Política para `exclusoes`: Apenas o `criador_id` do evento pode inserir/deletar.
-    - Política para `mensagens_privadas`: SELECT permitido apenas se `auth.uid()` for o remetente ou o destinatário.
+    - Política para `participants`: O usuário autenticado só pode ver seu próprio `drawn_id` [5].
+    - Política para `exclusions`: Apenas o `creator_id` do event pode inserir/deletar.
+    - Política para `private_messages`: SELECT permitido apenas se `auth.uid()` for o remetente ou o destinatário.
 
 ## Testes Obrigatórios
-- Executar teste de "ataque": Tentar consultar a coluna `sorteado_id` de outro usuário logado e garantir que retorne vazio ou erro [6].
+- Executar teste de "ataque": Tentar consultar a coluna `drawn_id` de outro usuário logado e garantir que retorne vazio ou erro [6].
 - Verificar se `service_role` consegue ignorar o RLS para o sorteio [7].

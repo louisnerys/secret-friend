@@ -1,16 +1,16 @@
-Objetivo: Criar o proxy de mensagens para garantir o anonimato total do doador.
+Objetivo: Criar o proxy de messages para garantir o anonimato total do doador.
 
 # Passo 3: Proxy de Chat Anônimo
 
-## Contexto
+## Context
 O sorteado pode responder ao seu Amigo Secreto sem saber quem ele é [14].
 
 ## Tarefas do Agente
 1. Criar Edge Function `get-anonymous-messages` que atua como proxy reverso [13, 15].
 2. Lógica de Higienização:
-    - Receber o `evento_id`.
-    - Consultar `mensagens_privadas`.
-    - Iterar pelas mensagens: Se `remetente_id != auth.uid()`, substituir o valor por uma string fixa "Seu Amigo Secreto" [16].
+    - Receber o `event_id`.
+    - Consultar `private_messages`.
+    - Iterar pelas messages: Se `sender_id != auth.uid()`, substituir o valor por uma string fixa "Seu Amigo Secreto" [16].
     - Remover campos de UUID reais do remetente do objeto JSON final [17].
 
 ## Garantia de Qualidade

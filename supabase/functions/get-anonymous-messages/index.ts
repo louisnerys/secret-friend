@@ -9,20 +9,20 @@ const ANONYMOUS_DISPLAY_NAME = "Seu Amigo Secreto";
 
 interface PrivateMessage {
   id: string;
-  evento_id: string;
-  remetente_id: string;
-  destinatario_id: string;
-  texto: string;
-  criado_at: string;
+  event_id: string;
+  sender_id: string;
+  recipient_id: string;
+  text: string;
+  created_at: string;
 }
 
 interface SanitizedMessage {
   id: string;
-  evento_id: string;
-  remetente_display: string;
+  event_id: string;
+  sender_display: string;
   is_mine: boolean;
-  texto: string;
-  criado_at: string;
+  text: string;
+  created_at: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -40,17 +40,17 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 2. Parse evento_id from query params or body
+    // 2. Parse event_id from query params or body
     const url = new URL(req.url);
-    let evento_id = url.searchParams.get("evento_id");
+    let event_id = url.searchParams.get("event_id");
 
-    if (!evento_id && req.method === "POST") {
+    if (!event_id && req.method === "POST") {
       const body = await req.json().catch(() => ({}));
-      evento_id = body.evento_id ?? null;
+      event_id = body.event_id ?? null;
     }
 
-    if (!evento_id) {
-      return new Response(JSON.stringify({ error: "evento_id is required" }), {
+    if (!event_id) {
+      return new Response(JSON.stringify({ error: "event_id is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -73,17 +73,27 @@ Deno.serve(async (req: Request) => {
 
     const callerId = user.id;
 
+    // Fetch the person the caller drew to classify messages
+    const { data: myPart } = await userClient
+      .from("participants")
+      .select("drawn_id")
+      .eq("event_id", event_id)
+      .eq("user_id", callerId)
+      .single();
+    
+    const myDrawnId = myPart?.drawn_id;
+
     // 4. Fetch messages where the caller is involved (sender or recipient)
-    // Use user-scoped client — RLS on mensagens_privadas already restricts to sender/recipient
+    // Use user-scoped client — RLS on private_messages already restricts to sender/recipient
     const { data: messages, error: msgError } = await userClient
-      .from("mensagens_privadas")
-      .select("id, evento_id, remetente_id, destinatario_id, texto, criado_at")
-      .eq("evento_id", evento_id)
-      .order("criado_at", { ascending: true });
+      .from("private_messages")
+      .select("id, event_id, sender_id, recipient_id, text, created_at")
+      .eq("event_id", event_id)
+      .order("created_at", { ascending: true });
 
     if (msgError) {
       console.error("get-anonymous-messages fetch error:", msgError);
-      return new Response(JSON.stringify({ error: "Erro ao buscar mensagens." }), {
+      return new Response(JSON.stringify({ error: "Erro ao buscar messages." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -91,16 +101,25 @@ Deno.serve(async (req: Request) => {
 
     // 5. Sanitize: strip real sender UUID for messages not sent by the caller
     const sanitized: SanitizedMessage[] = (messages as PrivateMessage[]).map((msg) => {
-      const isMyMessage = msg.remetente_id === callerId;
+      const isMyMessage = msg.sender_id === callerId;
+      
+      let chat_type = "drawer";
+      if (myDrawnId) {
+        if (msg.recipient_id === myDrawnId || msg.sender_id === myDrawnId) {
+          chat_type = "drawn";
+        }
+      }
+
       return {
         id: msg.id,
-        evento_id: msg.evento_id,
-        // CRITICAL: Never expose the real remetente_id of someone else
-        remetente_display: isMyMessage ? "Você" : ANONYMOUS_DISPLAY_NAME,
+        event_id: msg.event_id,
+        // CRITICAL: Never expose the real sender_id of someone else
+        sender_display: isMyMessage ? "Você" : ANONYMOUS_DISPLAY_NAME,
         is_mine: isMyMessage,
-        texto: msg.texto,
-        criado_at: msg.criado_at,
-        // remetente_id and destinatario_id are intentionally OMITTED from the response
+        chat_type: chat_type as any,
+        text: msg.text,
+        created_at: msg.created_at,
+        // sender_id and recipient_id are intentionally OMITTED from the response
       };
     });
 

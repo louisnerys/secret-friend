@@ -7,12 +7,12 @@ const corsHeaders = {
 
 interface Participant {
   id: string;
-  usuario_id: string;
+  user_id: string;
 }
 
 interface Exclusion {
-  usuario_a_id: string;
-  usuario_b_id: string;
+  user_a_id: string;
+  user_b_id: string;
 }
 
 /**
@@ -21,17 +21,17 @@ interface Exclusion {
  *
  * @param participants - List of participants (giver order)
  * @param exclusions   - Set of forbidden (giver, receiver) pairs
- * @returns Map from giver usuario_id -> receiver usuario_id, or null if impossible
+ * @returns Map from giver user_id -> receiver user_id, or null if impossible
  */
 function smartDraw(
   participants: Participant[],
   exclusions: Exclusion[],
 ): Map<string, string> | null {
-  const ids = participants.map((p) => p.usuario_id);
+  const ids = participants.map((p) => p.user_id);
   const forbidden = new Set<string>(
     exclusions.flatMap((e) => [
-      `${e.usuario_a_id}->${e.usuario_b_id}`,
-      `${e.usuario_b_id}->${e.usuario_a_id}`,
+      `${e.user_a_id}->${e.user_b_id}`,
+      `${e.user_b_id}->${e.user_a_id}`,
     ]),
   );
 
@@ -54,8 +54,12 @@ function smartDraw(
     if (index === ids.length) return true;
 
     const giver = ids[index];
-    // Shuffle receivers for randomness
-    const shuffled = [...ids].sort(() => Math.random() - 0.5);
+    // Shuffle receivers for randomness using Fisher-Yates
+    const shuffled = [...ids];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
 
     for (const receiver of shuffled) {
       if (isValid(giver, receiver)) {
@@ -92,9 +96,9 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Parse request body
-    const { evento_id } = await req.json();
-    if (!evento_id) {
-      return new Response(JSON.stringify({ error: "evento_id is required" }), {
+    const { event_id } = await req.json();
+    if (!event_id) {
+      return new Response(JSON.stringify({ error: "event_id is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -122,52 +126,52 @@ Deno.serve(async (req: Request) => {
     );
 
     // 5. Verify the caller is the event creator
-    const { data: evento, error: eventoError } = await serviceClient
-      .from("eventos")
-      .select("id, criador_id, status")
-      .eq("id", evento_id)
+    const { data: event, error: eventError } = await serviceClient
+      .from("events")
+      .select("id, creator_id, status")
+      .eq("id", event_id)
       .single();
 
-    if (eventoError || !evento) {
-      return new Response(JSON.stringify({ error: "Evento não encontrado." }), {
+    if (eventError || !event) {
+      return new Response(JSON.stringify({ error: "Event não encontrado." }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (evento.criador_id !== user.id) {
+    if (event.creator_id !== user.id) {
       return new Response(
-        JSON.stringify({ error: "Apenas o criador do evento pode realizar o sorteio." }),
+        JSON.stringify({ error: "Apenas o criador do event pode realizar o sorteio." }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    if (evento.status !== "aberto") {
+    if (event.status !== "open") {
       return new Response(
-        JSON.stringify({ error: `O evento já está com status '${evento.status}'.` }),
+        JSON.stringify({ error: `O event já está com status '${event.status}'.` }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     // 6. Fetch all participants and exclusions using service_role (bypasses RLS)
     const { data: participants, error: partError } = await serviceClient
-      .from("participantes")
-      .select("id, usuario_id")
-      .eq("evento_id", evento_id);
+      .from("participants")
+      .select("id, user_id")
+      .eq("event_id", event_id);
 
     if (partError || !participants || participants.length < 2) {
       return new Response(
-        JSON.stringify({ error: "O evento precisa de pelo menos 2 participantes." }),
+        JSON.stringify({ error: "O event precisa de pelo menos 2 participants." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const { data: exclusoes, error: exclusoesError } = await serviceClient
-      .from("exclusoes")
-      .select("usuario_a_id, usuario_b_id")
-      .eq("evento_id", evento_id);
+    const { data: exclusions, error: exclusionsError } = await serviceClient
+      .from("exclusions")
+      .select("user_a_id, user_b_id")
+      .eq("event_id", event_id);
 
-    if (exclusoesError) {
+    if (exclusionsError) {
       return new Response(JSON.stringify({ error: "Erro ao buscar exclusões." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -175,7 +179,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // 7. Run the Smart Draw algorithm
-    const result = smartDraw(participants, exclusoes ?? []);
+    const result = smartDraw(participants, exclusions ?? []);
 
     if (!result) {
       return new Response(
@@ -187,16 +191,16 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 8. Persist results: update sorteado_id for each participant
+    // 8. Persist results: update drawn_id for each participant
     const updates = participants.map((p) => ({
       id: p.id,
-      sorteado_id: result.get(p.usuario_id)!,
+      drawn_id: result.get(p.user_id)!,
     }));
 
     for (const update of updates) {
       const { error: updateError } = await serviceClient
-        .from("participantes")
-        .update({ sorteado_id: update.sorteado_id })
+        .from("participants")
+        .update({ drawn_id: update.drawn_id })
         .eq("id", update.id);
 
       if (updateError) {
@@ -204,14 +208,14 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 9. Update event status to 'sorteado'
+    // 9. Update event status to 'drawn'
     const { error: statusError } = await serviceClient
-      .from("eventos")
-      .update({ status: "sorteado" })
-      .eq("id", evento_id);
+      .from("events")
+      .update({ status: "drawn" })
+      .eq("id", event_id);
 
     if (statusError) {
-      throw new Error(`Erro ao atualizar status do evento: ${statusError.message}`);
+      throw new Error(`Erro ao atualizar status do event: ${statusError.message}`);
     }
 
     return new Response(
