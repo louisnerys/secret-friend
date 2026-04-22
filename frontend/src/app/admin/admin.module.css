@@ -1,0 +1,199 @@
+.container {
+  min-height: 100vh;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 1.25rem;
+  color: #cbd5e1;
+  background: #0f172a;
+}
+
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #0f172a;
+  padding: 1rem;
+}
+
+.errorCard {
+  background: #1e293b;
+  padding: 2.5rem;
+  border-radius: 1rem;
+  border: 1px solid #334155;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.errorTitle {
+  color: #f87171;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.errorText {
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.errorDetails {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  gap: 1.5rem;
+}
+
+.backButton {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.backButton:hover {
+  color: #f8fafc;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(to right, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.metricCard {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.metricLabel {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.metricValue {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.metricSub {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  color: #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.eventosStats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.statBox {
+  flex: 1;
+  min-width: 200px;
+  background: #1e293b;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statName {
+  font-size: 1.125rem;
+  color: #cbd5e1;
+}
+
+.statNum {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.buttonPrimary {
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.buttonPrimary:hover {
+  background: #7dd3fc;
+}
+
+.buttonSecondary {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.buttonSecondary:hover {
+  background: #334155;
+  color: #f8fafc;
+}

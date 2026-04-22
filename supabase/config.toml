@@ -1,0 +1,22 @@
+
+[functions.perform-draw]
+enabled = true
+verify_jwt = true
+import_map = "./functions/perform-draw/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/perform-draw/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/perform-draw/*.html" ]
+
+[functions.get-anonymous-messages]
+enabled = true
+verify_jwt = true
+import_map = "./functions/get-anonymous-messages/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/get-anonymous-messages/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/get-anonymous-messages/*.html" ]
