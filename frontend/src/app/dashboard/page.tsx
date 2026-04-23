@@ -23,23 +23,61 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => { fetchEvents(); }, []);
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        fetchEvents(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        router.push('/login');
+      }
+    });
 
-  const fetchEvents = async () => {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { router.push('/login'); return; }
+    // Initial check
+    const checkUser = async () => {
+      console.log('Checking user session...');
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('Session found:', session.user.email);
+        fetchEvents(session.user.id);
+      } else {
+        const hasCode = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+        console.log('No session immediate. Has auth code in URL?', hasCode);
+        
+        if (!hasCode) {
+          console.log('No session and no code, redirecting to login');
+          setLoading(false);
+          router.push('/login');
+        } else {
+          console.log('Auth code detected, waiting for onAuthStateChange to handle it...');
+        }
+      }
+    };
 
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('name, is_admin')
-      .eq('id', authData.user.id)
-      .single();
+    checkUser();
 
-    setProfile(userProfile || {});
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
-    const { data, error } = await supabase.from('events').select('*');
-    if (!error && data) setEvents(data);
-    setLoading(false);
+  const fetchEvents = async (userId: string) => {
+    try {
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('name, is_admin')
+        .eq('id', userId)
+        .single();
+
+      setProfile(userProfile || {});
+
+      const { data, error } = await supabase.from('events').select('*');
+      if (!error && data) setEvents(data);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
