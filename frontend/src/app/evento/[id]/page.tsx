@@ -1,34 +1,11 @@
 'use client';
 
-import { useEffect, useState, use, useCallback } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface EventPageProps {
   params: Promise<{ id: string }>;
-}
-
-interface EventData {
-  id: string;
-  name: string;
-  description: string;
-  status: string;
-  creator_id: string;
-  reveal_date?: string;
-}
-
-interface Participant {
-  user_id: string;
-  drawn_id: string | null;
-  wishlist: string | null;
-  users: { name: string } | null;
-}
-
-interface MuralMessage {
-  id: string;
-  text: string;
-  reactions: Record<string, string>;
-  users: { name: string } | null;
 }
 
 const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
@@ -45,19 +22,21 @@ const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; 
 
 export default function EventDetalhes(props: EventPageProps) {
   const { id } = use(props.params);
-  const [event, setEvent] = useState<EventData | null>(null);
-  const [participants, setParticipantes] = useState<Participant[]>([]);
+  const [event, setEvent] = useState<any>(null);
+  const [participants, setParticipantes] = useState<any[]>([]);
   const [isParticipant, setIsParticipant] = useState(false);
-  const [muralMsgs, setMuralMsgs] = useState<MuralMessage[]>([]);
+  const [muralMsgs, setMuralMsgs] = useState<any[]>([]);
   const [newMuralMsg, setNewMuralMsg] = useState('');
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string; user_metadata?: { name?: string } } | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [myWishlist, setMyWishlist] = useState('');
   const [isEditingWishlist, setIsEditingWishlist] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const router = useRouter();
 
-  const fetchData = useCallback(async () => {
+  useEffect(() => { fetchData(); }, [id]);
+
+  const fetchData = async () => {
     const { data: authData } = await supabase.auth.getUser();
     if (!authData.user) { router.push('/login?redirect=/evento/' + id); return; }
     setUser(authData.user);
@@ -67,7 +46,7 @@ export default function EventDetalhes(props: EventPageProps) {
       .maybeSingle();
 
     if (eventError || !eventData) { alert('Evento não encontrado'); router.push('/dashboard'); return; }
-    setEvent(eventData as unknown as EventData);
+    setEvent(eventData);
 
     const { data: parts } = await supabase
       .from('vw_participants')
@@ -75,8 +54,8 @@ export default function EventDetalhes(props: EventPageProps) {
       .eq('event_id', id);
 
     if (parts) {
-      setParticipantes(parts as unknown as Participant[]);
-      const me = (parts as unknown as Participant[]).find(p => p.user_id === authData.user!.id);
+      setParticipantes(parts);
+      const me = parts.find(p => p.user_id === authData.user!.id);
       setIsParticipant(!!me);
       if (me?.wishlist) setMyWishlist(me.wishlist);
     }
@@ -87,16 +66,9 @@ export default function EventDetalhes(props: EventPageProps) {
       .eq('event_id', id)
       .order('created_at', { ascending: true });
 
-    if (mMsgs) setMuralMsgs(mMsgs as unknown as MuralMessage[]);
+    if (mMsgs) setMuralMsgs(mMsgs);
     setLoading(false);
-  }, [id, router]);
-
-  useEffect(() => {
-    const init = async () => {
-      await fetchData();
-    };
-    init();
-  }, [fetchData]);
+  };
 
   const handleJoin = async () => {
     if (!user) return;
@@ -204,7 +176,7 @@ export default function EventDetalhes(props: EventPageProps) {
           </button>
           <div className="flex flex-col">
             <h1 className="font-headline tracking-tighter text-xl font-bold text-primary leading-none">
-              {event?.name}
+              {event.name}
             </h1>
             {dateLabel && (
               <span className="font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
@@ -214,8 +186,8 @@ export default function EventDetalhes(props: EventPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${statusBg[event?.status || 'open'] || statusBg.open}`}>
-            {statusLabel[event?.status || 'open'] || event?.status}
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${statusBg[event.status] || statusBg.open}`}>
+            {statusLabel[event.status] || event.status}
           </span>
           <button onClick={handleCopyLink} className="text-on-surface-variant hover:text-primary transition-colors" title="Copiar link">
             <MSO>{copySuccess ? 'check_circle' : 'link'}</MSO>
@@ -229,11 +201,11 @@ export default function EventDetalhes(props: EventPageProps) {
           <div className="absolute top-4 right-4 text-secondary-container/30">
             <MSO fill size={36}>auto_awesome</MSO>
           </div>
-          <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">{event?.description}</p>
+          <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">{event.description}</p>
         </section>
 
         {/* Reveal / Draw section */}
-        {isParticipant && event?.status === 'drawn' && (
+        {isParticipant && event.status === 'drawn' && (
           <section className="bg-surface-container-low rounded-xl p-8 relative overflow-hidden border-t-2 border-secondary/20">
             <div className="absolute top-4 right-4 text-secondary-container/30">
               <MSO fill size={36}>auto_awesome</MSO>
@@ -252,7 +224,7 @@ export default function EventDetalhes(props: EventPageProps) {
         )}
 
         {/* Wishlist */}
-        {isParticipant && event?.status === 'open' && (
+        {isParticipant && event.status === 'open' && (
           <section className="space-y-4">
             <div className="flex justify-between items-end">
               <h2 className="font-headline text-xl text-primary">Minha Lista de Desejos</h2>
@@ -313,7 +285,7 @@ export default function EventDetalhes(props: EventPageProps) {
 
         {/* Actions bar */}
         <div className="flex flex-wrap gap-3 items-center">
-          {!isParticipant && event?.status === 'open' && (
+          {!isParticipant && event.status === 'open' && (
             <button
               onClick={handleJoin}
               className="luxury-gradient text-on-primary font-bold py-4 px-8 rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:shadow-[0_12px_32px_rgba(122,0,26,0.3)] transition-all flex items-center gap-2"
@@ -323,7 +295,7 @@ export default function EventDetalhes(props: EventPageProps) {
             </button>
           )}
 
-          {isCreator && event?.status === 'open' && (
+          {isCreator && event.status === 'open' && (
             <button
               onClick={handleDraw}
               disabled={participants.length < 3}
@@ -362,7 +334,7 @@ export default function EventDetalhes(props: EventPageProps) {
                 <span className="text-xs font-bold text-on-surface">{p.users?.name?.split(' ')[0]}</span>
               </div>
             ))}
-            {isCreator && event?.status === 'open' && (
+            {isCreator && event.status === 'open' && (
               <button
                 onClick={() => handleCopyLink()}
                 className="flex-shrink-0 w-16 h-16 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors"
@@ -438,7 +410,7 @@ export default function EventDetalhes(props: EventPageProps) {
           <MSO>card_giftcard</MSO>
           <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">Lista</span>
         </button>
-        {isParticipant && event?.status === 'drawn' && (
+        {isParticipant && event.status === 'drawn' && (
           <button
             onClick={() => router.push(`/evento/${id}/draw`)}
             className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors"
