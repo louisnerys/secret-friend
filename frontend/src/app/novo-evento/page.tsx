@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 
 export default function NewEvent() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [revealDate, setRevealDate] = useState('');
@@ -26,7 +28,7 @@ export default function NewEvent() {
       .from('events')
       .insert({
         name: name.trim(),
-        description: description.trim() || 'Novo sorteio de amigo secreto',
+        description: description.trim() || t('newEvent.default_description'),
         reveal_date: revealDate ? new Date(revealDate).toISOString() : null,
         creator_id: user.user.id,
         status: 'open',
@@ -35,7 +37,7 @@ export default function NewEvent() {
       .single();
 
     if (error || !data) {
-      setError('Erro ao criar evento: ' + (error?.message || 'Falha desconhecida.'));
+      setError(t('newEvent.create_error') + ': ' + (error?.message || t('common.error')));
       setLoading(false);
       return;
     }
@@ -53,11 +55,12 @@ export default function NewEvent() {
             <button
               onClick={() => router.push('/dashboard')}
               className="text-primary active:scale-95 transition-transform"
+              aria-label={t('common.back')}
             >
-              <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 24 }}>arrow_back</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 24 }} aria-hidden="true">arrow_back</span>
             </button>
             <h1 className="text-xl font-bold tracking-tight text-primary font-display">
-              Novo Evento
+              {t('newEvent.title')}
             </h1>
           </div>
           <div className="w-6" />
@@ -66,21 +69,20 @@ export default function NewEvent() {
 
       <main className="pt-24 pb-12 px-6 max-w-md mx-auto">
         {/* Hero Banner */}
-        <div className="relative mb-10 overflow-hidden rounded-xl h-48 bg-surface-container-low flex items-center justify-center">
+        <div className="relative mb-10 overflow-hidden rounded-xl h-48 bg-surface-container-low flex items-center justify-center" aria-hidden="true">
           <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-primary to-secondary-container" />
           <div className="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent" />
           <div className="relative z-10 text-center">
             <span className="inline-block px-3 py-1 bg-secondary-container/30 text-primary text-[10px] font-bold tracking-[0.1em] uppercase rounded-full mb-2">
-              Novo
+              New
             </span>
             <h2 className="text-3xl font-extrabold text-primary tracking-tighter font-display">
-              Criar Novo Evento
+              {t('newEvent.create_title')}
             </h2>
           </div>
-          {/* Decorative star */}
           <span
-            className="absolute top-4 right-4 text-secondary-container/30 pointer-events-none"
-            style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+            className="absolute top-4 right-4 text-secondary-container/30 pointer-events-none material-symbols-outlined"
+            style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}
           >
             star
           </span>
@@ -94,13 +96,13 @@ export default function NewEvent() {
               className="block text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant px-1"
               htmlFor="event-name"
             >
-              Nome do Evento
+              {t('newEvent.fields.name')}
             </label>
             <div className="relative group">
               <input
                 id="event-name"
                 type="text"
-                placeholder="Ex: Amigo Oculto da Firma"
+                placeholder={t('newEvent.fields.name_placeholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -117,11 +119,11 @@ export default function NewEvent() {
               className="block text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant px-1"
               htmlFor="event-date"
             >
-              Data da Troca de Presentes
+              {t('newEvent.fields.reveal_date')}
             </label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none">
-                <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 20 }}>calendar_today</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 20 }} aria-hidden="true">calendar_today</span>
               </div>
               <input
                 id="event-date"
@@ -140,12 +142,12 @@ export default function NewEvent() {
               className="block text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant px-1"
               htmlFor="event-rules"
             >
-              Descrição ou Regras
+              {t('newEvent.fields.description')}
             </label>
             <div className="relative group">
               <textarea
                 id="event-rules"
-                placeholder="Defina o valor mínimo, sugestões de presentes ou local do evento..."
+                placeholder={t('newEvent.fields.description_placeholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
@@ -153,14 +155,14 @@ export default function NewEvent() {
               />
               <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary transition-all duration-500 group-focus-within:w-full" />
               <div className="absolute top-4 right-4 text-secondary-container opacity-20 pointer-events-none">
-                <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 20, fontVariationSettings: "'FILL' 1" }}>star</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }} aria-hidden="true">star</span>
               </div>
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="p-3 text-sm text-on-error bg-error rounded-lg">{error}</div>
+            <div className="p-3 text-sm text-on-error bg-error rounded-lg" role="alert">{error}</div>
           )}
 
           {/* Actions */}
@@ -170,7 +172,7 @@ export default function NewEvent() {
               disabled={loading}
               className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] active:scale-95 transition-transform disabled:opacity-70"
             >
-              {loading ? 'Criando…' : 'Criar Evento'}
+              {loading ? t('common.loading') : t('newEvent.create_button')}
             </button>
             <button
               type="button"
@@ -178,7 +180,7 @@ export default function NewEvent() {
               disabled={loading}
               className="w-full py-2 text-primary font-bold text-sm tracking-wide hover:opacity-70 transition-opacity"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
           </div>
         </form>
@@ -186,13 +188,14 @@ export default function NewEvent() {
         {/* Info chip */}
         <div className="mt-12 p-4 bg-tertiary-fixed/30 rounded-xl flex items-start gap-3">
           <span
-            className="text-on-tertiary-container shrink-0"
-            style={{ fontFamily: 'Material Symbols Outlined', fontSize: 20 }}
+            className="material-symbols-outlined text-on-tertiary-container shrink-0"
+            style={{ fontSize: 20 }}
+            aria-hidden="true"
           >
             auto_awesome
           </span>
           <p className="text-[12px] text-on-tertiary-container leading-relaxed">
-            Ao criar este evento, você se tornará o organizador e poderá convidar amigos através de um link exclusivo.
+            {t('newEvent.info_text')}
           </p>
         </div>
       </main>
@@ -204,16 +207,16 @@ export default function NewEvent() {
             onClick={() => router.push('/dashboard')}
             className="flex flex-col items-center justify-center text-primary bg-primary/5 rounded-full px-4 py-2"
           >
-            <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22, fontVariationSettings: "'FILL' 1" }}>celebration</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Events</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }} aria-hidden="true">celebration</span>
+            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">{t('dashboard.nav_events')}</span>
           </button>
           <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
-            <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22 }}>group_add</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Invite</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">group_add</span>
+            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">{t('common.invite')}</span>
           </button>
           <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
-            <span style={{ fontFamily: 'Material Symbols Outlined', fontSize: 22 }}>person</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">Me</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">person</span>
+            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">{t('dashboard.nav_profile')}</span>
           </button>
         </div>
       </nav>

@@ -2,17 +2,20 @@ import type { Metadata, Viewport } from "next";
 import { Epilogue, Manrope } from "next/font/google";
 import "./globals.css";
 import PwaRegister from "./PwaRegister";
+import I18nProvider from "@/components/I18nProvider";
 
 const epilogue = Epilogue({
   variable: "--font-epilogue",
   subsets: ["latin"],
   weight: ["400", "700", "800", "900"],
+  display: "swap",
 });
 
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -34,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="en">
       <head>
         <link
           rel="stylesheet"
@@ -42,8 +45,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${epilogue.variable} ${manrope.variable} font-body bg-surface text-on-surface antialiased overflow-x-hidden min-h-screen`}>
-        <PwaRegister />
-        {children}
+        <I18nProvider>
+          <PwaRegister />
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );
