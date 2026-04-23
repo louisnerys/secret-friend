@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -25,7 +25,11 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchMetrics = useCallback(async () => {
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
+
+  const fetchMetrics = async () => {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
       router.push('/login');
@@ -40,14 +44,7 @@ export default function AdminDashboard() {
       setMetrics(data as AdminMetrics);
     }
     setLoading(false);
-  }, [router]);
-
-  useEffect(() => {
-    const init = async () => {
-      await fetchMetrics();
-    };
-    init();
-  }, [fetchMetrics]);
+  };
 
   const handleMakeMeAdmin = async () => {
     alert('Para testar, atualize a coluna is_admin do seu usuário para true diretamente no banco de dados.');

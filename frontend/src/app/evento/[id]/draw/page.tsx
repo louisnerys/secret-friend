@@ -1,20 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef, use, useCallback } from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface DrawPageProps {
   params: Promise<{ id: string }>;
-}
-
-interface Message {
-  id: string;
-  text: string;
-  sender_display: string;
-  is_mine: boolean;
-  chat_type: 'drawn' | 'drawer';
-  created_at: string;
 }
 
 const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
@@ -31,8 +22,8 @@ const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; 
 
 export default function DrawPage(props: DrawPageProps) {
   const { id } = use(props.params);
-  const [myDrawn, setMyDrawn] = useState<{ name: string } | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [myDrawn, setMyDrawn] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [activeChat, setActiveChat] = useState<'drawn' | 'drawer'>('drawn');
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,7 +31,27 @@ export default function DrawPage(props: DrawPageProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const fetchDrawAndMessages = useCallback(async () => {
+  useEffect(() => {
+    fetchDrawAndMessages();
+
+    const channel = supabase
+      .channel('private_messages_changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'private_messages',
+        filter: `event_id=eq.${id}`,
+      }, () => { fetchDrawAndMessages(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const fetchDrawAndMessages = async () => {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) { router.push('/login'); return; }
 
@@ -57,7 +68,7 @@ export default function DrawPage(props: DrawPageProps) {
         .select('name')
         .eq('id', parts.drawn_id)
         .single();
-      setMyDrawn(drawn as { name: string } | null);
+      setMyDrawn(drawn);
     }
 
     const res = await fetch(
@@ -76,30 +87,7 @@ export default function DrawPage(props: DrawPageProps) {
     }
 
     setLoading(false);
-  }, [id, router]);
-
-  useEffect(() => {
-    const init = async () => {
-      await fetchDrawAndMessages();
-    };
-    init();
-
-    const channel = supabase
-      .channel('private_messages_changes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'private_messages',
-        filter: `event_id=eq.${id}`,
-      }, () => { fetchDrawAndMessages(); })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [id, fetchDrawAndMessages]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +96,7 @@ export default function DrawPage(props: DrawPageProps) {
     const text = newMessage.trim();
     setNewMessage('');
 
-    const optMsg: Message = {
+    const optMsg = {
       id: Date.now().toString(),
       text,
       sender_display: 'Você',
@@ -301,7 +289,7 @@ export default function DrawPage(props: DrawPageProps) {
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="w-12 h-12 rounded-full luxury-gradient text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,25,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+              className="w-12 h-12 rounded-full luxury-gradient text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
             >
               <MSO size={20}>send</MSO>
             </button>

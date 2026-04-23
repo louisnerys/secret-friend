@@ -144,38 +144,30 @@ if (user3Token) {
 // Insert users profiles
 section("PASSO 1 — Tabela users (INSERT + RLS)");
 
-const insertU1 = await rest("POST", "/rest/v1/users", 
-  { id: user1Id, email: email1, name: "User Test 1" },
-  { Authorization: `Bearer ${user1Token}` }
-);
-if (insertU1.status === 201 || insertU1.status === 200) {
-  ok("User 1 inserido na tabela users");
+// Verificando se os usuários foram inseridos pelo trigger
+const selectU1 = await rest("GET", `/rest/v1/users?id=eq.${user1Id}`, undefined, { Authorization: `Bearer ${user1Token}` });
+if (selectU1.status === 200 && selectU1.data && selectU1.data.length === 1) {
+  ok("User 1 inserido na tabela users automaticamente (trigger)");
 } else {
-  fail("INSERT users user1", `Status ${insertU1.status}: ${JSON.stringify(insertU1.data)}`);
+  fail("Verifica users user1", `Status ${selectU1.status}: ${JSON.stringify(selectU1.data)}`);
 }
 
-const insertU2 = await rest("POST", "/rest/v1/users",
-  { id: user2Id, email: email2, name: "User Test 2" },
-  { Authorization: `Bearer ${user2Token}` }
-);
-if (insertU2.status === 201 || insertU2.status === 200) {
-  ok("User 2 inserido na tabela users");
+const selectU2 = await rest("GET", `/rest/v1/users?id=eq.${user2Id}`, undefined, { Authorization: `Bearer ${user2Token}` });
+if (selectU2.status === 200 && selectU2.data && selectU2.data.length === 1) {
+  ok("User 2 inserido na tabela users automaticamente (trigger)");
 } else {
-  fail("INSERT users user2", `Status ${insertU2.status}: ${JSON.stringify(insertU2.data)}`);
+  fail("Verifica users user2", `Status ${selectU2.status}: ${JSON.stringify(selectU2.data)}`);
 }
 
-const insertU3 = await rest("POST", "/rest/v1/users",
-  { id: user3Id, email: email3, name: "User Test 3" },
-  { Authorization: `Bearer ${user3Token}` }
-);
-if (insertU3.status === 201 || insertU3.status === 200) {
-  ok("User 3 inserido na tabela users");
+const selectU3 = await rest("GET", `/rest/v1/users?id=eq.${user3Id}`, undefined, { Authorization: `Bearer ${user3Token}` });
+if (selectU3.status === 200 && selectU3.data && selectU3.data.length === 1) {
+  ok("User 3 inserido na tabela users automaticamente (trigger)");
 } else {
-  fail("INSERT users user3", `Status ${insertU3.status}: ${JSON.stringify(insertU3.data)}`);
+  fail("Verifica users user3", `Status ${selectU3.status}: ${JSON.stringify(selectU3.data)}`);
 }
 
 // Test SELECT on users (policy: anyone can view)
-const selectUsers = await rest("GET", "/rest/v1/users?select=id,email,name",
+const selectUsers = await rest("GET", "/rest/v1/users?select=id,email,nome",
   undefined, { Authorization: `Bearer ${user1Token}` }
 );
 if (selectUsers.status === 200 && Array.isArray(selectUsers.data) && (selectUsers.data as unknown[]).length >= 2) {
@@ -188,7 +180,7 @@ if (selectUsers.status === 200 && Array.isArray(selectUsers.data) && (selectUser
 section("PASSO 1 — Tabela events");
 
 const createEvent = await rest("POST", "/rest/v1/events",
-  { creator_id: user1Id, name: `E2E Event ${ts}`, description: "Teste E2E" },
+  { creator_id: user1Id, nome: `E2E Event ${ts}`, description: "Teste E2E" },
   { 
     Authorization: `Bearer ${user1Token}`,
     Prefer: "return=representation"
@@ -203,7 +195,7 @@ if (createEvent.status === 201 || createEvent.status === 200) {
 }
 
 // User 2 should NOT be able to see the event (not a participant yet)
-const u2SeeEvent = await rest("GET", `/rest/v1/events?id=eq.${eventId}&select=id,name`,
+const u2SeeEvent = await rest("GET", `/rest/v1/events?id=eq.${eventId}&select=id,nome`,
   undefined, { Authorization: `Bearer ${user2Token}` }
 );
 if (u2SeeEvent.status === 200 && Array.isArray(u2SeeEvent.data) && (u2SeeEvent.data as unknown[]).length === 0) {
@@ -248,7 +240,7 @@ if (addP3.status === 201 || addP3.status === 200) {
 }
 
 // User 2 can now see the event (is a participant)
-const u2SeeEventNow = await rest("GET", `/rest/v1/events?id=eq.${eventId}&select=id,name`,
+const u2SeeEventNow = await rest("GET", `/rest/v1/events?id=eq.${eventId}&select=id,nome`,
   undefined, { Authorization: `Bearer ${user2Token}` }
 );
 if (u2SeeEventNow.status === 200 && Array.isArray(u2SeeEventNow.data) && (u2SeeEventNow.data as unknown[]).length === 1) {
@@ -440,14 +432,14 @@ if (addMsg2.status === 201 || addMsg2.status === 200) {
   fail("INSERT mensagem2", `Status ${addMsg2.status}: ${JSON.stringify(addMsg2.data)}`);
 }
 
-// User 2 calls get-anonymous-messages — should see messages with sender_display masked
+// User 2 calls get-anonymous-messages — should see messages with remetente masked
 const anonMsgRes = await fetch(`${SUPABASE_URL}/functions/v1/get-anonymous-messages?event_id=${eventId}`, {
   headers: {
     "Authorization": `Bearer ${user2Token}`,
     "apikey": ANON_KEY,
   },
 });
-const anonMsgData = await anonMsgRes.json() as { messages: { sender_display: string; is_mine: boolean; text: string }[] };
+const anonMsgData = await anonMsgRes.json() as { messages: { remetente_display: string; is_mine: boolean; text: string }[] };
 
 if (anonMsgRes.status === 200 && anonMsgData.messages) {
   ok(`get-anonymous-messages: Retornou ${anonMsgData.messages.length} mensagem(s)`);
@@ -465,11 +457,11 @@ if (anonMsgRes.status === 200 && anonMsgData.messages) {
     fail("get-anonymous-messages vazamento UUID", `UUIDs encontrados: ${forbiddenUuids.join(", ")}`);
   }
 
-  // Verify sender_display is anonymized for messages NOT sent by user2
+  // Verify remetente_display is anonymized for messages NOT sent by user2
   const receivedMsgs = anonMsgData.messages.filter(m => !m.is_mine);
-  const allAnonymized = receivedMsgs.every(m => m.sender_display === "Seu Amigo Secreto");
+  const allAnonymized = receivedMsgs.every(m => m.remetente_display === "Seu Amigo Secreto");
   if (allAnonymized && receivedMsgs.length > 0) {
-    ok(`get-anonymous-messages: Mensagens recebidas têm sender_display="Seu Amigo Secreto"`);
+    ok(`get-anonymous-messages: Mensagens recebidas têm remetente_display="Seu Amigo Secreto"`);
   } else if (receivedMsgs.length === 0) {
     ok("get-anonymous-messages: Nenhuma mensagem recebida no filtro (apenas enviadas)");
   } else {
@@ -478,9 +470,9 @@ if (anonMsgRes.status === 200 && anonMsgData.messages) {
 
   // Verify sent messages show "Você"
   const sentMsgs = anonMsgData.messages.filter(m => m.is_mine);
-  const allMine = sentMsgs.every(m => m.sender_display === "Você");
+  const allMine = sentMsgs.every(m => m.remetente_display === "Você");
   if (allMine && sentMsgs.length > 0) {
-    ok(`get-anonymous-messages: Mensagens enviadas têm sender_display="Você"`);
+    ok(`get-anonymous-messages: Mensagens enviadas têm remetente_display="Você"`);
   }
 } else {
   fail("get-anonymous-messages chamada", `Status ${anonMsgRes.status}: ${JSON.stringify(anonMsgData)}`);
