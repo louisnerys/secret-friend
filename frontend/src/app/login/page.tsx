@@ -17,7 +17,7 @@ export default function Login() {
     setError(null);
 
     const searchParams = new URLSearchParams(window.location.search);
-    const redirectPath = searchParams.get('redirect') || '/dashboard';
+    const redirectPath = searchParams.get('redirect') || '/callback';
 
     // We need the full URL for OAuth redirect
     const redirectTo = `${window.location.origin}/callback?next=${encodeURIComponent(redirectPath)}`;

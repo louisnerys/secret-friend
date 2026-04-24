@@ -10,11 +10,11 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       console.log('Auth callback initiated...');
-
+      
       // Supabase library parses the URL automatically on initialization/load.
       // We just need to check if we have a session now.
       const { data: { session }, error } = await supabase.auth.getSession();
-
+      
       if (error) {
         console.error('Auth callback error:', error);
         router.push('/login?error=callback_failed');
