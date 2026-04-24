@@ -77,10 +77,7 @@ export default function EventDetalhes(props: EventPageProps) {
   }, [id, router, t]);
 
   useEffect(() => {
-    const doFetch = async () => {
-        await fetchData();
-    };
-    doFetch();
+    fetchData();
   }, [fetchData]);
 
   const handleJoin = async () => {

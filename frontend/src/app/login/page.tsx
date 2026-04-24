@@ -17,10 +17,10 @@ export default function Login() {
     setError(null);
 
     const searchParams = new URLSearchParams(window.location.search);
-    const redirectPath = searchParams.get('redirect') || '/callback';
+    const redirectPath = searchParams.get('redirect') || '/dashboard';
 
     // We need the full URL for OAuth redirect
-    const redirectTo = `${window.location.origin}${redirectPath}`;
+    const redirectTo = `${window.location.origin}/callback?next=${encodeURIComponent(redirectPath)}`;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,

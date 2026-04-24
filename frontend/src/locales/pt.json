@@ -10,7 +10,9 @@
     "copied": "Copiado!",
     "connecting": "Conectando...",
     "logout": "Sair",
-    "admin": "Admin"
+    "admin": "Admin",
+    "invite": "Convidar",
+    "you": "Você"
   },
   "login": {
     "title": "A Celebração",

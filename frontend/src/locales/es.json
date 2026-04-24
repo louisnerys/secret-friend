@@ -10,7 +10,9 @@
     "copied": "¡Copiado!",
     "connecting": "Conectando...",
     "logout": "Cerrar sesión",
-    "admin": "Admin"
+    "admin": "Admin",
+    "invite": "Invitar",
+    "you": "Tú"
   },
   "login": {
     "title": "A Celebração",
@@ -72,9 +74,9 @@
     "participants": "Participantes",
     "add_participant": "Agregar Participante",
     "draw": "Sortear Amigo",
-    "draw_now": "Realizar Sorteo",
+    "draw_now": "Realizar Sorteio",
     "reveal": "Ver quién me tocó",
-    "reveal_name": "Revelar Nombre",
+    "reveal_name": "Revelar Nome",
     "status": "Estado",
     "date": "Fecha",
     "price_range": "Rango de Precios",

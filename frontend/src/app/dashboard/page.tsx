@@ -30,7 +30,7 @@ export default function Dashboard() {
       setProfile(userProfile || {});
 
       const { data, error } = await supabase.from('events').select('*');
-      if (!error && data) setEvents(data as Event[]);
+      if (!error && data) setEvents(data as unknown as Event[]);
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
