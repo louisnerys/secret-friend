@@ -1,22 +1,14 @@
 'use client';
 
 import { useEffect, useState, useRef, use, useCallback } from 'react';
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { PrivateMessage } from '@/lib/types';
+import { PrivateMessage } from "@/lib/types";
 
 interface DrawPageProps {
   params: Promise<{ id: string }>;
-}
-
-interface Message {
-  id: string;
-  text: string;
-  sender_display: string;
-  is_mine: boolean;
-  chat_type: 'drawn' | 'drawer';
-  created_at: string;
 }
 
 const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
@@ -35,7 +27,7 @@ export default function DrawPage(props: DrawPageProps) {
   const { t } = useTranslation();
   const { id } = use(props.params);
   const [myDrawn, setMyDrawn] = useState<{ name: string } | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Partial<PrivateMessage>[]>([]);
   const [activeChat, setActiveChat] = useState<'drawn' | 'drawer'>('drawn');
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -44,8 +36,8 @@ export default function DrawPage(props: DrawPageProps) {
   const router = useRouter();
 
   const fetchDrawAndMessages = useCallback(async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) { router.push('/login'); return; }
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) { router.push('/login'); return; }
 
     const { data: parts } = await supabase
       .from('participants')
@@ -60,7 +52,7 @@ export default function DrawPage(props: DrawPageProps) {
         .select('name')
         .eq('id', parts.drawn_id)
         .single();
-      setMyDrawn(drawn as { name: string } | null);
+      setMyDrawn(drawn as { name: string });
     }
 
     const { data: sessionData } = await supabase.auth.getSession();
@@ -83,24 +75,29 @@ export default function DrawPage(props: DrawPageProps) {
   }, [id, router]);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchDrawAndMessages();
+    setTimeout(() => fetchDrawAndMessages(), 0);
+
+    let channel: RealtimeChannel | null = null;
+
+    const setupChannel = async () => {
+      const chan = supabase
+        .channel("private_messages_changes")
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "private_messages",
+          filter: `event_id=eq.${id}`,
+        }, () => { setTimeout(() => fetchDrawAndMessages(), 0); })
+        .subscribe();
+      channel = chan;
     };
-    init();
 
-    const channel = supabase
-      .channel('private_messages_changes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'private_messages',
-        filter: `event_id=eq.${id}`,
-      }, () => { fetchDrawAndMessages(); })
-      .subscribe();
+    setupChannel();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [id, fetchDrawAndMessages]);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -112,7 +109,7 @@ export default function DrawPage(props: DrawPageProps) {
     const text = newMessage.trim();
     setNewMessage('');
 
-    const optMsg: Message = {
+    const optMsg: Partial<PrivateMessage> = {
       id: Date.now().toString(),
       text,
       sender_display: 'You',
@@ -130,7 +127,7 @@ export default function DrawPage(props: DrawPageProps) {
 
     if (error) {
       alert(t('draw.send_error'));
-      fetchDrawAndMessages();
+      setTimeout(() => fetchDrawAndMessages(), 0);
     }
   };
 
@@ -314,7 +311,7 @@ export default function DrawPage(props: DrawPageProps) {
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="w-12 h-12 rounded-full luxury-gradient text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,25,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+              className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
             >
               <MSO size={20}>send</MSO>
             </button>

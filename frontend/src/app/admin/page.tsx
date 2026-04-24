@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { AdminMetrics } from '@/lib/types';
+import { AdminMetrics } from "@/lib/types";
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
@@ -31,10 +31,7 @@ export default function AdminDashboard() {
   }, [router]);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchMetrics();
-    };
-    init();
+    setTimeout(() => fetchMetrics(), 0);
   }, [fetchMetrics]);
 
   const handleMakeMeAdmin = async () => {
