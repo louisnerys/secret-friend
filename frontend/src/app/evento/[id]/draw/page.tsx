@@ -1,26 +1,20 @@
 'use client';
 
 import { useEffect, useState, useRef, use, useCallback } from 'react';
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { PrivateMessage } from "@/lib/types";
 
 interface DrawPageProps {
   params: Promise<{ id: string }>;
 }
 
-interface Message {
-  id: string;
-  text: string;
-  sender_display: string;
-  is_mine: boolean;
-  chat_type: 'drawn' | 'drawer';
-  created_at: string;
-}
-
 const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
   <span
+    className="material-symbols-outlined"
     style={{
-      fontFamily: 'Material Symbols Outlined',
       fontSize: size,
       fontVariationSettings: fill ? "'FILL' 1" : "'FILL' 0",
     }}
@@ -30,9 +24,10 @@ const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; 
 );
 
 export default function DrawPage(props: DrawPageProps) {
+  const { t } = useTranslation();
   const { id } = use(props.params);
   const [myDrawn, setMyDrawn] = useState<{ name: string } | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Partial<PrivateMessage>[]>([]);
   const [activeChat, setActiveChat] = useState<'drawn' | 'drawer'>('drawn');
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -41,14 +36,14 @@ export default function DrawPage(props: DrawPageProps) {
   const router = useRouter();
 
   const fetchDrawAndMessages = useCallback(async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) { router.push('/login'); return; }
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) { router.push('/login'); return; }
 
     const { data: parts } = await supabase
       .from('participants')
       .select('drawn_id')
       .eq('event_id', id)
-      .eq('user_id', user.user.id)
+      .eq('user_id', authData.user.id)
       .single();
 
     if (parts?.drawn_id) {
@@ -57,14 +52,15 @@ export default function DrawPage(props: DrawPageProps) {
         .select('name')
         .eq('id', parts.drawn_id)
         .single();
-      setMyDrawn(drawn as { name: string } | null);
+      setMyDrawn(drawn as { name: string });
     }
 
+    const { data: sessionData } = await supabase.auth.getSession();
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-anonymous-messages?event_id=${id}`,
       {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${sessionData.session?.access_token}`,
           apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         },
       }
@@ -79,24 +75,29 @@ export default function DrawPage(props: DrawPageProps) {
   }, [id, router]);
 
   useEffect(() => {
-    const init = async () => {
-      await fetchDrawAndMessages();
+    setTimeout(() => fetchDrawAndMessages(), 0);
+
+    let channel: RealtimeChannel | null = null;
+
+    const setupChannel = async () => {
+      const chan = supabase
+        .channel("private_messages_changes")
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "private_messages",
+          filter: `event_id=eq.${id}`,
+        }, () => { setTimeout(() => fetchDrawAndMessages(), 0); })
+        .subscribe();
+      channel = chan;
     };
-    init();
 
-    const channel = supabase
-      .channel('private_messages_changes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'private_messages',
-        filter: `event_id=eq.${id}`,
-      }, () => { fetchDrawAndMessages(); })
-      .subscribe();
+    setupChannel();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [id, fetchDrawAndMessages]);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -108,10 +109,10 @@ export default function DrawPage(props: DrawPageProps) {
     const text = newMessage.trim();
     setNewMessage('');
 
-    const optMsg: Message = {
+    const optMsg: Partial<PrivateMessage> = {
       id: Date.now().toString(),
       text,
-      sender_display: 'Você',
+      sender_display: 'You',
       is_mine: true,
       chat_type: activeChat,
       created_at: new Date().toISOString(),
@@ -124,18 +125,21 @@ export default function DrawPage(props: DrawPageProps) {
       p_to_drawer: activeChat === 'drawer',
     });
 
-    if (error) { alert('Erro ao enviar mensagem'); fetchDrawAndMessages(); }
+    if (error) {
+      alert(t('draw.send_error'));
+      setTimeout(() => fetchDrawAndMessages(), 0);
+    }
   };
 
   const filteredMessages = messages.filter(m => m.chat_type === activeChat);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center" aria-live="polite">
         <div className="flex flex-col items-center gap-4">
           <div className="w-14 h-14 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs animate-pulse">
-            Revelando o segredo…
+            {t('draw.revealing')}
           </p>
         </div>
       </div>
@@ -149,11 +153,12 @@ export default function DrawPage(props: DrawPageProps) {
         <button
           onClick={() => router.push(`/evento/${id}`)}
           className="text-primary active:scale-90 transition-transform"
+          aria-label={t('common.back')}
         >
           <MSO>arrow_back</MSO>
         </button>
         <h1 className="font-display font-bold text-xl text-primary tracking-tighter">
-          Amigo Oculto
+          {t('draw.title')}
         </h1>
         <div className="w-6" />
       </header>
@@ -163,20 +168,20 @@ export default function DrawPage(props: DrawPageProps) {
         {/* ── Reveal Card ── */}
         <div className="shrink-0 relative mt-4 rounded-2xl overflow-hidden">
           {/* Luxury background */}
-          <div className="absolute inset-0 luxury-gradient opacity-95" />
+          <div className="absolute inset-0 bg-primary opacity-95" />
           <div className="absolute -top-8 -right-8 w-36 h-36 bg-white/10 rounded-full blur-2xl" />
           <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-white/10 rounded-full blur-xl" />
-          {/* Decorative star */}
           <span
-            className="absolute top-4 right-5 text-white/20 pointer-events-none"
-            style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+            className="absolute top-4 right-5 text-white/20 pointer-events-none material-symbols-outlined"
+            style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+            aria-hidden="true"
           >
             star
           </span>
 
           <div className="relative z-10 p-8 text-center">
             <p className="text-on-primary/70 font-label uppercase tracking-[0.15em] text-[10px] font-bold mb-3">
-              Você tirou
+              {t('draw.you_drew')}
             </p>
 
             {revealed ? (
@@ -189,7 +194,7 @@ export default function DrawPage(props: DrawPageProps) {
                 className="group inline-flex items-center gap-3 bg-white/15 hover:bg-white/25 active:scale-95 transition-all rounded-full px-7 py-3.5 text-on-primary font-bold text-lg border border-white/20 shadow-inner"
               >
                 <MSO size={20}>visibility</MSO>
-                Revelar Nome
+                {t('draw.reveal_name')}
               </button>
             )}
 
@@ -199,7 +204,7 @@ export default function DrawPage(props: DrawPageProps) {
                   onClick={() => setRevealed(false)}
                   className="text-on-primary/50 text-xs font-bold uppercase tracking-widest hover:text-on-primary/80 transition-colors"
                 >
-                  Ocultar
+                  {t('draw.hide')}
                 </button>
               </div>
             )}
@@ -214,51 +219,56 @@ export default function DrawPage(props: DrawPageProps) {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-primary flex items-center gap-2">
                 <MSO fill size={20}>chat</MSO>
-                Chat Anônimo
+                {t('draw.anonymous_chat')}
               </h3>
               <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container px-2 py-1 rounded-full">
-                Identidade oculta
+                {t('draw.hidden_identity')}
               </span>
             </div>
 
             {/* Pill tab switcher */}
-            <div className="flex bg-surface-container rounded-full p-1 gap-1">
+            <div className="flex bg-surface-container rounded-full p-1 gap-1" role="tablist">
               <button
                 onClick={() => setActiveChat('drawn')}
+                role="tab"
+                aria-selected={activeChat === 'drawn'}
                 className={`flex-1 py-2 text-xs font-bold rounded-full transition-all duration-200 ${
                   activeChat === 'drawn'
                     ? 'bg-primary text-on-primary shadow'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                Meu Amigo Secreto
+                {t('draw.tab_my_drawn')}
               </button>
               <button
                 onClick={() => setActiveChat('drawer')}
+                role="tab"
+                aria-selected={activeChat === 'drawer'}
                 className={`flex-1 py-2 text-xs font-bold rounded-full transition-all duration-200 ${
                   activeChat === 'drawer'
                     ? 'bg-primary text-on-primary shadow'
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                Quem me tirou
+                {t('draw.tab_my_drawer')}
               </button>
             </div>
           </div>
 
           {/* Messages area */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-surface-container/30">
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-surface-container/30" aria-live="polite">
             {filteredMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center gap-3 py-12">
                 <span
-                  className="text-secondary-container"
-                  style={{ fontFamily: 'Material Symbols Outlined', fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+                  className="material-symbols-outlined text-secondary-container"
+                  style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+                  aria-hidden="true"
                 >
                   forum
                 </span>
-                <p className="font-display font-bold text-on-surface-variant">Nenhuma mensagem ainda</p>
+                <p className="font-display font-bold text-on-surface-variant">{t('draw.no_messages')}</p>
                 <p className="text-xs text-on-surface-variant/60 text-center max-w-[180px]">
-                  Mande a primeira mensagem anônima!
+                  {t('draw.send_first')}
                 </p>
               </div>
             ) : (
@@ -267,14 +277,14 @@ export default function DrawPage(props: DrawPageProps) {
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
                       msg.is_mine
-                        ? 'luxury-gradient text-on-primary rounded-br-sm'
+                        ? 'bg-primary text-on-primary rounded-br-sm'
                         : 'bg-surface-container border border-outline-variant/20 text-on-surface rounded-bl-sm'
                     }`}
                   >
                     <span className={`block text-[10px] font-bold uppercase tracking-widest mb-1 ${
                       msg.is_mine ? 'text-on-primary/60' : 'text-on-surface-variant/70'
                     }`}>
-                      {msg.sender_display}
+                      {msg.sender_display === 'Você' ? t('common.you') || 'You' : msg.sender_display}
                     </span>
                     <p className="leading-relaxed text-sm">{msg.text}</p>
                   </div>
@@ -294,14 +304,14 @@ export default function DrawPage(props: DrawPageProps) {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Mensagem anônima…"
+                placeholder={t('draw.placeholder')}
                 className="w-full bg-surface-container-highest border-none rounded-full px-5 py-3 text-sm focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 text-on-surface"
               />
             </div>
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="w-12 h-12 rounded-full luxury-gradient text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,25,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+              className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
             >
               <MSO size={20}>send</MSO>
             </button>
