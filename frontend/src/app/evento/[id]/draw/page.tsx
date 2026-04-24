@@ -10,6 +10,15 @@ interface DrawPageProps {
   params: Promise<{ id: string }>;
 }
 
+interface Message {
+  id: string;
+  text: string;
+  sender_display: string;
+  is_mine: boolean;
+  chat_type: 'drawn' | 'drawer';
+  created_at: string;
+}
+
 const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; size?: number }) => (
   <span
     className="material-symbols-outlined"
@@ -26,7 +35,7 @@ export default function DrawPage(props: DrawPageProps) {
   const { t } = useTranslation();
   const { id } = use(props.params);
   const [myDrawn, setMyDrawn] = useState<{ name: string } | null>(null);
-  const [messages, setMessages] = useState<Partial<PrivateMessage>[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [activeChat, setActiveChat] = useState<'drawn' | 'drawer'>('drawn');
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -35,8 +44,8 @@ export default function DrawPage(props: DrawPageProps) {
   const router = useRouter();
 
   const fetchDrawAndMessages = useCallback(async () => {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { router.push('/login'); return; }
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) { router.push('/login'); return; }
 
     const { data: parts } = await supabase
       .from('participants')
@@ -51,7 +60,7 @@ export default function DrawPage(props: DrawPageProps) {
         .select('name')
         .eq('id', parts.drawn_id)
         .single();
-      setMyDrawn(drawn as { name: string });
+      setMyDrawn(drawn as { name: string } | null);
     }
 
     const { data: sessionData } = await supabase.auth.getSession();
@@ -74,7 +83,10 @@ export default function DrawPage(props: DrawPageProps) {
   }, [id, router]);
 
   useEffect(() => {
-    fetchDrawAndMessages();
+    const init = async () => {
+      await fetchDrawAndMessages();
+    };
+    init();
 
     const channel = supabase
       .channel('private_messages_changes')
@@ -100,7 +112,7 @@ export default function DrawPage(props: DrawPageProps) {
     const text = newMessage.trim();
     setNewMessage('');
 
-    const optMsg: Partial<PrivateMessage> = {
+    const optMsg: Message = {
       id: Date.now().toString(),
       text,
       sender_display: 'You',
@@ -302,7 +314,7 @@ export default function DrawPage(props: DrawPageProps) {
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+              className="w-12 h-12 rounded-full luxury-gradient text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,25,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
             >
               <MSO size={20}>send</MSO>
             </button>

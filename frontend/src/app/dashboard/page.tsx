@@ -19,6 +19,25 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const fetchEvents = useCallback(async (userId: string) => {
+    try {
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('name, is_admin')
+        .eq('id', userId)
+        .single();
+
+      setProfile(userProfile || {});
+
+      const { data, error } = await supabase.from('events').select('*');
+      if (!error && data) setEvents(data as Event[]);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
@@ -55,26 +74,7 @@ export default function Dashboard() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
-
-  const fetchEvents = async (userId: string) => {
-    try {
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('name, is_admin')
-        .eq('id', userId)
-        .single();
-
-      setProfile(userProfile || {});
-
-      const { data, error } = await supabase.from('events').select('*');
-      if (!error && data) setEvents(data);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [router, fetchEvents]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

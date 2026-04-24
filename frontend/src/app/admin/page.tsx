@@ -31,7 +31,10 @@ export default function AdminDashboard() {
   }, [router]);
 
   useEffect(() => {
-    fetchMetrics();
+    const init = async () => {
+      await fetchMetrics();
+    };
+    init();
   }, [fetchMetrics]);
 
   const handleMakeMeAdmin = async () => {
