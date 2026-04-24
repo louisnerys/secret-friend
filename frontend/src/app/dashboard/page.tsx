@@ -5,14 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-
-interface Event {
-  id: string;
-  name: string;
-  description: string;
-  status: 'open' | 'drawn' | 'closed';
-  reveal_date?: string;
-}
+import { Event } from '@/lib/types';
 
 interface UserProfile {
   name?: string;
@@ -26,31 +19,69 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchEvents = useCallback(async () => {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { router.push('/login'); return; }
+  const fetchEvents = useCallback(async (userId: string) => {
+    try {
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('name, is_admin')
+        .eq('id', userId)
+        .single();
 
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('name, is_admin')
-      .eq('id', authData.user.id)
-      .single();
+      setProfile(userProfile || {});
 
-    setProfile(userProfile || {});
+      const { data, error } = await supabase.from('events').select('*');
+      if (!error && data) setEvents(data as Event[]);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    const { data, error } = await supabase.from('events').select('*');
-    if (!error && data) setEvents(data as Event[]);
-    setLoading(false);
-  }, [router]);
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        fetchEvents(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        router.push('/login');
+      }
+    });
 
-  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+    // Initial check
+    const checkUser = async () => {
+      console.log('Checking user session...');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        console.log('Session found:', session.user.email);
+        fetchEvents(session.user.id);
+      } else {
+        const hasCode = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+        console.log('No session immediate. Has auth code in URL?', hasCode);
+
+        if (!hasCode) {
+          console.log('No session and no code, redirecting to login');
+          setLoading(false);
+          router.push('/login');
+        } else {
+          console.log('Auth code detected, waiting for onAuthStateChange to handle it...');
+        }
+      }
+    };
+
+    checkUser();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchEvents, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
   };
 
-  const firstName = profile.name?.split(' ')[0] || t('dashboard.status.open'); // Fallback to 'Amigo' equivalent if needed, but let's use name
+  const firstName = profile.name?.split(' ')[0] || t('dashboard.status.open');
 
   if (loading) {
     return (
