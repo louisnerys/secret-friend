@@ -8,12 +8,60 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 export default function Login() {
   const { t } = useTranslation();
   const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const [loadingGithub, setLoadingGithub] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingEmail(true);
+    setError(null);
+    setSuccessMsg(null);
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectPath = searchParams.get('redirect') || '/dashboard';
+    const redirectTo = `${window.location.origin}/callback?next=${encodeURIComponent(redirectPath)}`;
+
+    if (isRegister) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+          emailRedirectTo: redirectTo,
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccessMsg(t('login.check_email'));
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        // Redirect directly since it's password login
+        window.location.href = redirectPath;
+      }
+    }
+    setLoadingEmail(false);
+  };
+
+  const handleSocialLogin = async (provider: 'google') => {
     if (provider === 'google') setLoadingGoogle(true);
-    if (provider === 'github') setLoadingGithub(true);
     setError(null);
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -32,7 +80,6 @@ export default function Login() {
     if (error) {
       setError(error.message);
       if (provider === 'google') setLoadingGoogle(false);
-      if (provider === 'github') setLoadingGithub(false);
     }
   };
 
@@ -107,7 +154,7 @@ export default function Login() {
             {/* Google Login Button */}
             <button
               onClick={() => handleSocialLogin('google')}
-              disabled={loadingGoogle || loadingGithub}
+              disabled={loadingGoogle || loadingEmail}
               className="flex items-center justify-center gap-3 w-full py-4 bg-white text-gray-800 rounded-full border border-gray-300 font-bold tracking-tight hover:bg-gray-50 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {loadingGoogle ? (
@@ -137,23 +184,83 @@ export default function Login() {
               )}
             </button>
 
-            {/* GitHub Login Button */}
-            <button
-              onClick={() => handleSocialLogin('github')}
-              disabled={loadingGoogle || loadingGithub}
-              className="flex items-center justify-center gap-3 w-full py-4 bg-[#24292F] text-white rounded-full font-bold tracking-tight hover:bg-[#24292F]/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              {loadingGithub ? (
-                t('common.connecting')
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                  </svg>
-                  {t('login.continue_github')}
-                </>
+
+            {successMsg && (
+              <div className="p-3 text-sm text-on-primary-container bg-primary-container rounded-lg text-center" role="status">
+                {successMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              {isRegister && (
+                <div>
+                  <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                    {t('login.name_label')}
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-outline bg-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
               )}
-            </button>
+
+              <div>
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                  {t('login.email_label')}
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-outline bg-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="name@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                  {t('login.password_label')}
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-outline bg-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loadingEmail || loadingGoogle}
+                className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+              >
+                {loadingEmail ? t('common.connecting') : (isRegister ? t('login.sign_up') : t('login.sign_in'))}
+              </button>
+            </form>
+
+            <div className="flex items-center justify-between mt-6">
+              <div className="w-full h-[1px] bg-outline-variant" />
+              <span className="px-4 text-sm text-on-surface-variant">{t('login.or')}</span>
+              <div className="w-full h-[1px] bg-outline-variant" />
+            </div>
+
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => setIsRegister(!isRegister)}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                {isRegister ? t('login.have_account') : t('login.no_account')}
+              </button>
+            </div>
+
           </div>
         </div>
 

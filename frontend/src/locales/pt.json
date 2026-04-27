@@ -22,8 +22,16 @@
     "welcome": "Bem-vindo",
     "login_prompt": "Faça login com sua conta social para continuar.",
     "continue_google": "Continuar com Google",
-    "continue_github": "Continuar com GitHub",
-    "footer": "© 2024 A Celebração — Experiências de Prestígio"
+    "footer": "© 2024 A Celebração — Experiências de Prestígio",
+    "email_label": "E-mail",
+    "password_label": "Senha",
+    "name_label": "Nome Completo",
+    "sign_in": "Entrar",
+    "sign_up": "Cadastrar",
+    "no_account": "Não tem uma conta?",
+    "have_account": "Já tem uma conta?",
+    "check_email": "Por favor, verifique seu e-mail para confirmar a conta.",
+    "or": "ou"
   },
   "dashboard": {
     "welcome_greeting": "Bem-vindo(a)",
@@ -42,14 +50,14 @@
       "closed": "Encerrado"
     },
     "guides": {
-        "wine": "Vinhos & Queijos",
-        "stationery": "Papelaria Fina",
-        "tech": "Acessórios Tech",
-        "gourmet": "Cesta Artesanal",
-        "label_2024": "Guia 2024",
-        "label_minimalist": "Minimalista",
-        "label_executive": "Executivo",
-        "label_gourmet": "Gourmet"
+      "wine": "Vinhos & Queijos",
+      "stationery": "Papelaria Fina",
+      "tech": "Acessórios Tech",
+      "gourmet": "Cesta Artesanal",
+      "label_2024": "Guia 2024",
+      "label_minimalist": "Minimalista",
+      "label_executive": "Executivo",
+      "label_gourmet": "Gourmet"
     }
   },
   "newEvent": {

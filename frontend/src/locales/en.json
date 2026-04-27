@@ -22,8 +22,16 @@
     "welcome": "Welcome",
     "login_prompt": "Log in with your social account to continue.",
     "continue_google": "Continue with Google",
-    "continue_github": "Continue with GitHub",
-    "footer": "© 2024 A Celebração — Prestige Experiences"
+    "footer": "© 2024 A Celebração — Prestige Experiences",
+    "email_label": "Email",
+    "password_label": "Password",
+    "name_label": "Full Name",
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "check_email": "Please check your email to verify your account.",
+    "or": "or"
   },
   "dashboard": {
     "welcome_greeting": "Welcome",
@@ -42,14 +50,14 @@
       "closed": "Closed"
     },
     "guides": {
-        "wine": "Wine & Cheese",
-        "stationery": "Fine Stationery",
-        "tech": "Tech Accessories",
-        "gourmet": "Artisanal Basket",
-        "label_2024": "2024 Guide",
-        "label_minimalist": "Minimalist",
-        "label_executive": "Executive",
-        "label_gourmet": "Gourmet"
+      "wine": "Wine & Cheese",
+      "stationery": "Fine Stationery",
+      "tech": "Tech Accessories",
+      "gourmet": "Artisanal Basket",
+      "label_2024": "2024 Guide",
+      "label_minimalist": "Minimalist",
+      "label_executive": "Executive",
+      "label_gourmet": "Gourmet"
     }
   },
   "newEvent": {
