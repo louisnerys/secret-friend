@@ -42,14 +42,14 @@
       "closed": "Encerrado"
     },
     "guides": {
-        "wine": "Vinhos & Queijos",
-        "stationery": "Papelaria Fina",
-        "tech": "Acessórios Tech",
-        "gourmet": "Cesta Artesanal",
-        "label_2024": "Guia 2024",
-        "label_minimalist": "Minimalista",
-        "label_executive": "Executivo",
-        "label_gourmet": "Gourmet"
+      "wine": "Vinhos & Queijos",
+      "stationery": "Papelaria Fina",
+      "tech": "Acessórios Tech",
+      "gourmet": "Cesta Artesanal",
+      "label_2024": "Guia 2024",
+      "label_minimalist": "Minimalista",
+      "label_executive": "Executivo",
+      "label_gourmet": "Gourmet"
     }
   },
   "newEvent": {
@@ -105,7 +105,12 @@
     "nav_events": "Eventos",
     "nav_list": "Lista",
     "nav_draw": "Sorteio",
-    "nav_profile": "Perfil"
+    "nav_profile": "Perfil",
+    "exclusions": "Regras de Sorteio",
+    "exclusion_group_placeholder": "Nome da regra (ex: Casais)",
+    "add_group": "Adicionar",
+    "no_exclusion_groups": "Nenhuma regra de sorteio criada.",
+    "exclusion_create_error": "Erro ao criar regra"
   },
   "draw": {
     "title": "Amigo Oculto",

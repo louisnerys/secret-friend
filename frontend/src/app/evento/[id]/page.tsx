@@ -4,7 +4,7 @@ import { useEffect, useState, use, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { User, Event, Participant, Message } from '@/lib/types';
+import { User, Event, Participant, Message, ExclusionGroup } from '@/lib/types';
 
 interface EventPageProps {
   params: Promise<{ id: string }>;
@@ -31,6 +31,11 @@ export default function EventDetalhes(props: EventPageProps) {
   const [isParticipant, setIsParticipant] = useState(false);
   const [muralMsgs, setMuralMsgs] = useState<Partial<Message>[]>([]);
   const [newMuralMsg, setNewMuralMsg] = useState('');
+
+  const [exclusionGroups, setExclusionGroups] = useState<ExclusionGroup[]>([]);
+  const [isManagingExclusions, setIsManagingExclusions] = useState(false);
+  const [newExclusionGroupName, setNewExclusionGroupName] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [myWishlist, setMyWishlist] = useState('');
@@ -146,6 +151,68 @@ export default function EventDetalhes(props: EventPageProps) {
       const reacts = { ...(currMsg.reactions || {}) };
       if (reacts[userId]) delete reacts[userId]; else reacts[userId] = '👍';
       await supabase.from('messages').update({ reactions: reacts }).eq('id', msgId);
+    }
+  };
+
+
+  const handleCreateExclusionGroup = async () => {
+    if (!newExclusionGroupName.trim() || !user) return;
+    const { data, error } = await supabase
+      .from('exclusion_groups')
+      .insert({ event_id: id, name: newExclusionGroupName })
+      .select()
+      .single();
+    if (!error && data) {
+      setExclusionGroups([...exclusionGroups, { ...data, exclusion_group_members: [] }]);
+      setNewExclusionGroupName('');
+    } else {
+      alert(t('event.exclusion_create_error') + ': ' + error?.message);
+    }
+  };
+
+  const handleDeleteExclusionGroup = async (groupId: string) => {
+    const { error } = await supabase.from('exclusion_groups').delete().eq('id', groupId);
+    if (!error) {
+      setExclusionGroups(exclusionGroups.filter((g) => g.id !== groupId));
+    }
+  };
+
+  const handleToggleMember = async (groupId: string, memberId: string) => {
+    const group = exclusionGroups.find((g) => g.id === groupId);
+    if (!group) return;
+
+    const isMember = group.exclusion_group_members?.some((m) => m.user_id === memberId);
+
+    if (isMember) {
+      const { error } = await supabase
+        .from('exclusion_group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', memberId);
+      if (!error) {
+        setExclusionGroups(
+          exclusionGroups.map((g) =>
+            g.id === groupId
+              ? { ...g, exclusion_group_members: g.exclusion_group_members?.filter((m) => m.user_id !== memberId) }
+              : g
+          )
+        );
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('exclusion_group_members')
+        .insert({ group_id: groupId, user_id: memberId })
+        .select()
+        .single();
+      if (!error && data) {
+        setExclusionGroups(
+          exclusionGroups.map((g) =>
+            g.id === groupId
+              ? { ...g, exclusion_group_members: [...(g.exclusion_group_members || []), data] }
+              : g
+          )
+        );
+      }
     }
   };
 
@@ -338,6 +405,84 @@ export default function EventDetalhes(props: EventPageProps) {
             </button>
           )}
         </div>
+
+
+        {/* Exclusions Management */}
+        {isCreator && event.status === 'open' && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-headline text-2xl text-primary">{t('event.exclusions')}</h2>
+              <button
+                onClick={() => setIsManagingExclusions(!isManagingExclusions)}
+                className="text-primary hover:bg-surface-container p-2 rounded-full transition-colors flex items-center justify-center"
+              >
+                <MSO>{isManagingExclusions ? 'expand_less' : 'expand_more'}</MSO>
+              </button>
+            </div>
+
+            {isManagingExclusions && (
+              <div className="bg-surface-container rounded-2xl p-4 space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newExclusionGroupName}
+                    onChange={(e) => setNewExclusionGroupName(e.target.value)}
+                    placeholder={t('event.exclusion_group_placeholder')}
+                    className="flex-1 bg-surface border border-outline-variant rounded-xl px-4 py-2 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    maxLength={50}
+                  />
+                  <button
+                    onClick={handleCreateExclusionGroup}
+                    disabled={!newExclusionGroupName.trim()}
+                    className="bg-primary text-on-primary px-4 py-2 rounded-xl disabled:opacity-50 flex items-center gap-2"
+                  >
+                    <MSO>add</MSO> {t('event.add_group')}
+                  </button>
+                </div>
+
+                {exclusionGroups.length > 0 ? (
+                  <div className="space-y-4">
+                    {exclusionGroups.map(group => (
+                      <div key={group.id} className="bg-surface rounded-xl p-4 border border-outline-variant">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-headline text-lg text-primary">{group.name}</h3>
+                          <button
+                            onClick={() => handleDeleteExclusionGroup(group.id)}
+                            className="text-error hover:bg-error-container p-1 rounded-full transition-colors"
+                          >
+                            <MSO>delete</MSO>
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {participants.map(p => {
+                            const isSelected = group.exclusion_group_members?.some(m => m.user_id === p.user_id);
+                            const pName = Array.isArray(p.users) ? p.users[0]?.name : p.users?.name;
+                            return (
+                              <button
+                                key={p.user_id}
+                                onClick={() => handleToggleMember(group.id, p.user_id)}
+                                className={`px-3 py-1.5 rounded-full text-sm font-body border transition-colors flex items-center gap-2 ${
+                                  isSelected
+                                    ? 'bg-primary text-on-primary border-primary'
+                                    : 'bg-surface text-on-surface-variant border-outline-variant hover:border-primary'
+                                }`}
+                              >
+                                {isSelected && <MSO size={16}>check</MSO>}
+                                {pName}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-on-surface-variant text-sm text-center py-4">{t('event.no_exclusion_groups')}</p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Participants */}
         <section className="space-y-4">

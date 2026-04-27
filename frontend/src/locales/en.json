@@ -42,14 +42,14 @@
       "closed": "Closed"
     },
     "guides": {
-        "wine": "Wine & Cheese",
-        "stationery": "Fine Stationery",
-        "tech": "Tech Accessories",
-        "gourmet": "Artisanal Basket",
-        "label_2024": "2024 Guide",
-        "label_minimalist": "Minimalist",
-        "label_executive": "Executive",
-        "label_gourmet": "Gourmet"
+      "wine": "Wine & Cheese",
+      "stationery": "Fine Stationery",
+      "tech": "Tech Accessories",
+      "gourmet": "Artisanal Basket",
+      "label_2024": "2024 Guide",
+      "label_minimalist": "Minimalist",
+      "label_executive": "Executive",
+      "label_gourmet": "Gourmet"
     }
   },
   "newEvent": {
@@ -105,7 +105,12 @@
     "nav_events": "Events",
     "nav_list": "List",
     "nav_draw": "Draw",
-    "nav_profile": "Profile"
+    "nav_profile": "Profile",
+    "exclusions": "Draw Rules",
+    "exclusion_group_placeholder": "Rule name (e.g., Couples)",
+    "add_group": "Add",
+    "no_exclusion_groups": "No draw rules created.",
+    "exclusion_create_error": "Error creating rule"
   },
   "draw": {
     "title": "Secret Santa",

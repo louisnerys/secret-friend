@@ -42,14 +42,14 @@
       "closed": "Cerrado"
     },
     "guides": {
-        "wine": "Vinos y Quesos",
-        "stationery": "Papelería Fina",
-        "tech": "Accesorios Tech",
-        "gourmet": "Canasta Artesanal",
-        "label_2024": "Guía 2024",
-        "label_minimalist": "Minimalista",
-        "label_executive": "Ejecutivo",
-        "label_gourmet": "Gourmet"
+      "wine": "Vinos y Quesos",
+      "stationery": "Papelería Fina",
+      "tech": "Accesorios Tech",
+      "gourmet": "Canasta Artesanal",
+      "label_2024": "Guía 2024",
+      "label_minimalist": "Minimalista",
+      "label_executive": "Ejecutivo",
+      "label_gourmet": "Gourmet"
     }
   },
   "newEvent": {
@@ -105,7 +105,12 @@
     "nav_events": "Eventos",
     "nav_list": "Lista",
     "nav_draw": "Sorteo",
-    "nav_profile": "Perfil"
+    "nav_profile": "Perfil",
+    "exclusions": "Reglas del Sorteo",
+    "exclusion_group_placeholder": "Nombre de la regla (ej: Parejas)",
+    "add_group": "Añadir",
+    "no_exclusion_groups": "No se han creado reglas de sorteo.",
+    "exclusion_create_error": "Error al crear la regla"
   },
   "draw": {
     "title": "Amigo Invisible",
