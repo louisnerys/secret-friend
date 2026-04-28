@@ -113,7 +113,9 @@
     "nav_events": "Eventos",
     "nav_list": "Lista",
     "nav_draw": "Sorteio",
-    "nav_profile": "Perfil"
+    "nav_profile": "Perfil",
+    "wishlist_limit_reached": "Você atingiu o limite de {{max}} itens.",
+    "wishlist_delete_error": "Erro ao excluir item da lista de desejos"
   },
   "draw": {
     "title": "Amigo Oculto",

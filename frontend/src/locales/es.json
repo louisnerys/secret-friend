@@ -113,7 +113,9 @@
     "nav_events": "Eventos",
     "nav_list": "Lista",
     "nav_draw": "Sorteo",
-    "nav_profile": "Perfil"
+    "nav_profile": "Perfil",
+    "wishlist_limit_reached": "Has alcanzado el límite de {{max}} artículos.",
+    "wishlist_delete_error": "Error al eliminar artículo de la lista de deseos"
   },
   "draw": {
     "title": "Amigo Invisible",

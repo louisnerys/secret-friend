@@ -113,7 +113,9 @@
     "nav_events": "Events",
     "nav_list": "List",
     "nav_draw": "Draw",
-    "nav_profile": "Profile"
+    "nav_profile": "Profile",
+    "wishlist_limit_reached": "You have reached the limit of {{max}} items.",
+    "wishlist_delete_error": "Error deleting wishlist item"
   },
   "draw": {
     "title": "Secret Santa",
