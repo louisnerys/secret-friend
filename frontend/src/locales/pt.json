@@ -114,6 +114,11 @@
     "nav_list": "Lista",
     "nav_draw": "Sorteio",
     "nav_profile": "Perfil",
+    "exclusions": "Regras de Sorteio",
+    "exclusion_group_placeholder": "Nome da regra (ex: Casais)",
+    "add_group": "Adicionar",
+    "no_exclusion_groups": "Nenhuma regra de sorteio criada.",
+    "exclusion_create_error": "Erro ao criar regra",
     "wishlist_limit_reached": "Você atingiu o limite de {{max}} itens.",
     "wishlist_delete_error": "Erro ao excluir item da lista de desejos"
   },

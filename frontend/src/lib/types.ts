@@ -70,3 +70,18 @@ export interface AdminMetrics {
   };
   messages_24h: number;
 }
+
+export interface ExclusionGroup {
+  id: string;
+  event_id: string;
+  name: string;
+  created_at?: string;
+  exclusion_group_members?: ExclusionGroupMember[];
+}
+
+export interface ExclusionGroupMember {
+  id: string;
+  group_id: string;
+  user_id: string;
+  created_at?: string;
+}

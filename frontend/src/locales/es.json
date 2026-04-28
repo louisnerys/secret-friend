@@ -114,6 +114,11 @@
     "nav_list": "Lista",
     "nav_draw": "Sorteo",
     "nav_profile": "Perfil",
+    "exclusions": "Reglas del Sorteo",
+    "exclusion_group_placeholder": "Nombre de la regla (ej: Parejas)",
+    "add_group": "Añadir",
+    "no_exclusion_groups": "No se han creado reglas de sorteo.",
+    "exclusion_create_error": "Error al crear la regla",
     "wishlist_limit_reached": "Has alcanzado el límite de {{max}} artículos.",
     "wishlist_delete_error": "Error al eliminar artículo de la lista de deseos"
   },

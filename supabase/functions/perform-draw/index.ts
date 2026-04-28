@@ -166,6 +166,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+
     const { data: exclusions, error: exclusionsError } = await serviceClient
       .from("exclusions")
       .select("user_a_id, user_b_id")
@@ -178,8 +179,60 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const { data: exclusionGroups, error: groupError } = await serviceClient
+      .from("exclusion_groups")
+      .select("id, name")
+      .eq("event_id", event_id);
+
+    if (groupError) {
+      return new Response(JSON.stringify({ error: "Erro ao buscar grupos de exclusão." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const allExclusions = [...(exclusions || [])];
+
+    if (exclusionGroups && exclusionGroups.length > 0) {
+      const groupIds = exclusionGroups.map(g => g.id);
+      const { data: groupMembers, error: memberError } = await serviceClient
+        .from("exclusion_group_members")
+        .select("group_id, user_id")
+        .in("group_id", groupIds);
+
+      if (memberError) {
+        return new Response(JSON.stringify({ error: "Erro ao buscar membros de grupos de exclusão." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (groupMembers) {
+        const membersByGroup = groupMembers.reduce((acc, member) => {
+          if (!acc[member.group_id]) {
+            acc[member.group_id] = [];
+          }
+          acc[member.group_id].push(member.user_id);
+          return acc;
+        }, {});
+
+        for (const groupId in membersByGroup) {
+          const members = membersByGroup[groupId];
+          for (let i = 0; i < members.length; i++) {
+            for (let j = i + 1; j < members.length; j++) {
+              allExclusions.push({
+                user_a_id: members[i],
+                user_b_id: members[j]
+              });
+            }
+          }
+        }
+      }
+    }
+
     // 7. Run the Smart Draw algorithm
-    const result = smartDraw(participants, exclusions ?? []);
+    const result = smartDraw(participants, allExclusions);
+
 
     if (!result) {
       return new Response(

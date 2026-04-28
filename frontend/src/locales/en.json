@@ -114,6 +114,11 @@
     "nav_list": "List",
     "nav_draw": "Draw",
     "nav_profile": "Profile",
+    "exclusions": "Draw Rules",
+    "exclusion_group_placeholder": "Rule name (e.g., Couples)",
+    "add_group": "Add",
+    "no_exclusion_groups": "No draw rules created.",
+    "exclusion_create_error": "Error creating rule",
     "wishlist_limit_reached": "You have reached the limit of {{max}} items.",
     "wishlist_delete_error": "Error deleting wishlist item"
   },
