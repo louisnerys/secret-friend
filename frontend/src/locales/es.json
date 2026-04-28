@@ -22,8 +22,16 @@
     "welcome": "Bienvenido",
     "login_prompt": "Inicia sesión con tu cuenta social para continuar.",
     "continue_google": "Continuar con Google",
-    "continue_github": "Continuar con GitHub",
-    "footer": "© 2024 A Celebração — Experiencias de Prestigio"
+    "footer": "© 2024 A Celebração — Experiencias de Prestigio",
+    "email_label": "Correo Electrónico",
+    "password_label": "Contraseña",
+    "name_label": "Nombre Completo",
+    "sign_in": "Iniciar Sesión",
+    "sign_up": "Regístrate",
+    "no_account": "¿No tienes una cuenta?",
+    "have_account": "¿Ya tienes una cuenta?",
+    "check_email": "Por favor, revisa tu correo para verificar tu cuenta.",
+    "or": "o"
   },
   "dashboard": {
     "welcome_greeting": "Bienvenido(a)",
@@ -110,7 +118,9 @@
     "exclusion_group_placeholder": "Nombre de la regla (ej: Parejas)",
     "add_group": "Añadir",
     "no_exclusion_groups": "No se han creado reglas de sorteo.",
-    "exclusion_create_error": "Error al crear la regla"
+    "exclusion_create_error": "Error al crear la regla",
+    "wishlist_limit_reached": "Has alcanzado el límite de {{max}} artículos.",
+    "wishlist_delete_error": "Error al eliminar artículo de la lista de deseos"
   },
   "draw": {
     "title": "Amigo Invisible",

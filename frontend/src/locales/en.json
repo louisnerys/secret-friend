@@ -22,8 +22,16 @@
     "welcome": "Welcome",
     "login_prompt": "Log in with your social account to continue.",
     "continue_google": "Continue with Google",
-    "continue_github": "Continue with GitHub",
-    "footer": "© 2024 A Celebração — Prestige Experiences"
+    "footer": "© 2024 A Celebração — Prestige Experiences",
+    "email_label": "Email",
+    "password_label": "Password",
+    "name_label": "Full Name",
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "check_email": "Please check your email to verify your account.",
+    "or": "or"
   },
   "dashboard": {
     "welcome_greeting": "Welcome",
@@ -110,7 +118,9 @@
     "exclusion_group_placeholder": "Rule name (e.g., Couples)",
     "add_group": "Add",
     "no_exclusion_groups": "No draw rules created.",
-    "exclusion_create_error": "Error creating rule"
+    "exclusion_create_error": "Error creating rule",
+    "wishlist_limit_reached": "You have reached the limit of {{max}} items.",
+    "wishlist_delete_error": "Error deleting wishlist item"
   },
   "draw": {
     "title": "Secret Santa",
