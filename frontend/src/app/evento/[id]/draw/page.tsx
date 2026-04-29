@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef, use, useCallback } from 'react';
-import { RealtimeChannel } from "@supabase/supabase-js";
-import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+import { use, useRef } from 'react';
+import { useEventDrawController } from '@/presentation/controllers/useEventDrawController';
+
+
+
+
 import { PrivateMessage } from "@/lib/types";
 
 interface DrawPageProps {
@@ -24,114 +25,26 @@ const MSO = ({ children, fill, size = 22 }: { children: string; fill?: boolean; 
 );
 
 export default function DrawPage(props: DrawPageProps) {
-  const { t } = useTranslation();
   const { id } = use(props.params);
-  const [myDrawn, setMyDrawn] = useState<{ name: string } | null>(null);
-  const [messages, setMessages] = useState<Partial<PrivateMessage>[]>([]);
-  const [activeChat, setActiveChat] = useState<'drawn' | 'drawer'>('drawn');
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [revealed, setRevealed] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const {
+    t,
+    i18n,
+    myDrawn,
+    messages,
+    activeChat,
+    setActiveChat,
+    newMessage,
+    setNewMessage,
+    loading,
+    revealed,
+    setRevealed,
+    router,
+    chatEndRef,
+    handleSendMessage,
+    filteredMessages
+  } = useEventDrawController(id);
 
-  const fetchDrawAndMessages = useCallback(async () => {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { router.push('/login'); return; }
-
-    const { data: parts } = await supabase
-      .from('participants')
-      .select('drawn_id')
-      .eq('event_id', id)
-      .eq('user_id', authData.user.id)
-      .single();
-
-    if (parts?.drawn_id) {
-      const { data: drawn } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', parts.drawn_id)
-        .single();
-      setMyDrawn(drawn as { name: string });
-    }
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-anonymous-messages?event_id=${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${sessionData.session?.access_token}`,
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        },
-      }
-    );
-
-    if (res.ok) {
-      const data = await res.json();
-      setMessages(data.messages || []);
-    }
-
-    setLoading(false);
-  }, [id, router]);
-
-  useEffect(() => {
-    setTimeout(() => fetchDrawAndMessages(), 0);
-
-    let channel: RealtimeChannel | null = null;
-
-    const setupChannel = async () => {
-      const chan = supabase
-        .channel("private_messages_changes")
-        .on("postgres_changes", {
-          event: "INSERT",
-          schema: "public",
-          table: "private_messages",
-          filter: `event_id=eq.${id}`,
-        }, () => { setTimeout(() => fetchDrawAndMessages(), 0); })
-        .subscribe();
-      channel = chan;
-    };
-
-    setupChannel();
-
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
-  }, [id, fetchDrawAndMessages]);
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    const text = newMessage.trim();
-    setNewMessage('');
-
-    const optMsg: Partial<PrivateMessage> = {
-      id: Date.now().toString(),
-      text,
-      sender_display: 'You',
-      is_mine: true,
-      chat_type: activeChat,
-      created_at: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, optMsg]);
-
-    const { error } = await supabase.rpc('send_anonymous_message', {
-      p_event_id: id,
-      p_text: text,
-      p_to_drawer: activeChat === 'drawer',
-    });
-
-    if (error) {
-      alert(t('draw.send_error'));
-      setTimeout(() => fetchDrawAndMessages(), 0);
-    }
-  };
-
-  const filteredMessages = messages.filter(m => m.chat_type === activeChat);
+  const messagesEndRef = chatEndRef;
 
   if (loading) {
     return (
@@ -312,6 +225,7 @@ export default function DrawPage(props: DrawPageProps) {
               type="submit"
               disabled={!newMessage.trim()}
               className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+              aria-label={t('common.send')}
             >
               <MSO size={20}>send</MSO>
             </button>
