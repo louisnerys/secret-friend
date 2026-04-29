@@ -66,7 +66,7 @@ export default function EventDetalhes(props: EventPageProps) {
 
     if (parts) {
       setParticipantes(parts as Participant[]);
-      const me = (parts as Participant[]).find((p: Participant) => p.user_id === authData.user!.id);
+      const me = parts.find((p: Participant) => p.user_id === authData.user!.id);
       setIsParticipant(!!me);
       if (me?.wishlist) setMyWishlist(me.wishlist);
     }
