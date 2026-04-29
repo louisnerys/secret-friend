@@ -46,7 +46,7 @@ export default function EventDetalhes(props: EventPageProps) {
   const fetchData = useCallback(async () => {
     const { data: authData } = await supabase.auth.getUser();
     if (!authData.user) { router.push('/login?redirect=/evento/' + id); return; }
-    setUser(authData.user as unknown as User);
+    setUser(authData.user as User);
 
     const { data: eventData, error: eventError } = await supabase
       .rpc('get_public_event', { p_id: id })
@@ -65,8 +65,8 @@ export default function EventDetalhes(props: EventPageProps) {
       .eq('event_id', id);
 
     if (parts) {
-      setParticipantes(parts as unknown as Participant[]);
-      const me = parts.find((p: Participant) => p.user_id === authData.user!.id);
+      setParticipantes(parts as Participant[]);
+      const me = (parts as Participant[]).find((p: Participant) => p.user_id === authData.user!.id);
       setIsParticipant(!!me);
       if (me?.wishlist) setMyWishlist(me.wishlist);
     }
@@ -77,7 +77,7 @@ export default function EventDetalhes(props: EventPageProps) {
       .eq('event_id', id)
       .order('created_at', { ascending: true });
 
-    if (mMsgs) setMuralMsgs(mMsgs as unknown as Partial<Message>[]);
+    if (mMsgs) setMuralMsgs(mMsgs as Partial<Message>[]);
     setLoading(false);
   }, [id, router, t]);
 
