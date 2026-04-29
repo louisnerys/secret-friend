@@ -312,6 +312,7 @@ export default function DrawPage(props: DrawPageProps) {
               type="submit"
               disabled={!newMessage.trim()}
               className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_4px_12px_rgba(122,0,26,0.25)] disabled:opacity-40 disabled:shadow-none active:scale-95 transition-all shrink-0"
+              aria-label={t('common.send')}
             >
               <MSO size={20}>send</MSO>
             </button>
