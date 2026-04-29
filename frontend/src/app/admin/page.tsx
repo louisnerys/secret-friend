@@ -1,42 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+import { useAdminController } from '@/presentation/controllers/useAdminController';
+
+
+
 import { AdminMetrics } from "@/lib/types";
 
 export default function AdminDashboard() {
-  const { t } = useTranslation();
-  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const fetchMetrics = useCallback(async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      router.push('/login');
-      return;
-    }
-
-    const { data, error } = await supabase.rpc('get_admin_metrics');
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setMetrics(data as AdminMetrics);
-    }
-    setLoading(false);
-  }, [router]);
-
-  useEffect(() => {
-    setTimeout(() => fetchMetrics(), 0);
-  }, [fetchMetrics]);
-
-  const handleMakeMeAdmin = async () => {
-    alert('Para testar, atualize a coluna is_admin do seu usuário para true diretamente no banco de dados.');
-  };
+  const {
+    t,
+    metrics,
+    loading,
+    error,
+    router,
+    handleMakeMeAdmin
+  } = useAdminController();
 
   if (loading) {
     return (
