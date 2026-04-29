@@ -244,21 +244,20 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // 8. Persist results: update drawn_id for each participant
+    // 8. Persist results: update drawn_id for each participant in bulk
     const updates = participants.map((p) => ({
       id: p.id,
+      event_id: event_id,
+      user_id: p.user_id,
       drawn_id: result.get(p.user_id)!,
     }));
 
-    for (const update of updates) {
-      const { error: updateError } = await serviceClient
-        .from("participants")
-        .update({ drawn_id: update.drawn_id })
-        .eq("id", update.id);
+    const { error: updateError } = await serviceClient
+      .from("participants")
+      .upsert(updates);
 
-      if (updateError) {
-        throw new Error(`Erro ao salvar sorteio para participante ${update.id}: ${updateError.message}`);
-      }
+    if (updateError) {
+      throw new Error(`Erro ao salvar sorteio: ${updateError.message}`);
     }
 
     // 9. Update event status to 'drawn'
