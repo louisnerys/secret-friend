@@ -113,8 +113,9 @@ export default function EventDetalhes(props: EventPageProps) {
           <button
             onClick={handleCopyLink}
             className="text-on-surface-variant hover:text-primary transition-colors flex items-center"
-            aria-label={t('common.copy')}
-            title={t('common.copy')}
+            aria-label={copySuccess ? t('common.copied') : t('common.copy')}
+            title={copySuccess ? t('common.copied') : t('common.copy')}
+            aria-live="polite"
           >
             <MSO>{copySuccess ? 'check_circle' : 'link'}</MSO>
           </button>
@@ -286,6 +287,7 @@ export default function EventDetalhes(props: EventPageProps) {
                           <button
                             onClick={() => handleDeleteExclusionGroup(group.id)}
                             className="text-error hover:bg-error-container p-1 rounded-full transition-colors"
+                            aria-label={t('common.delete')}
                           >
                             <MSO>delete</MSO>
                           </button>
@@ -346,9 +348,11 @@ export default function EventDetalhes(props: EventPageProps) {
               <button
                 onClick={() => handleCopyLink()}
                 className="flex-shrink-0 w-16 h-16 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors"
-                aria-label={t("common.invite")}
+                aria-label={copySuccess ? t("common.copied") : t("common.invite")}
+                title={copySuccess ? t("common.copied") : t("common.invite")}
+                aria-live="polite"
               >
-                <MSO>person_add</MSO>
+                <MSO>{copySuccess ? 'check_circle' : 'person_add'}</MSO>
               </button>
             )}
           </div>
@@ -400,6 +404,7 @@ export default function EventDetalhes(props: EventPageProps) {
                 type="submit"
                 disabled={!newMuralMsg.trim()}
                 className="bg-primary text-on-primary font-bold py-3 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                aria-label={t('common.send')}
               >
                 <MSO>send</MSO>
               </button>
