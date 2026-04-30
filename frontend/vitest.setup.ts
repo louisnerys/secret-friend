@@ -57,6 +57,8 @@ const mockGetUser = vi.fn();
 const mockGetSession = vi.fn();
 const mockExchangeCodeForSession = vi.fn();
 const mockSignInWithOAuth = vi.fn();
+const mockSignInWithPassword = vi.fn();
+const mockSignUp = vi.fn();
 const mockChannelOn = vi.fn().mockReturnThis();
 const mockChannelSubscribe = vi.fn();
 const mockInvoke = vi.fn();
@@ -71,6 +73,8 @@ vi.mock('@/lib/supabase', () => ({
       signOut: vi.fn(),
       exchangeCodeForSession: (...args: any[]) => mockExchangeCodeForSession(...args),
       signInWithOAuth: (...args: any[]) => mockSignInWithOAuth(...args),
+      signInWithPassword: (...args: any[]) => mockSignInWithPassword(...args),
+      signUp: (...args: any[]) => mockSignUp(...args),
     },
     from: vi.fn(() => chain),
     rpc: vi.fn((...args: any[]) => {
@@ -129,4 +133,12 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-export { mockGetUser, mockGetSession, mockExchangeCodeForSession, mockSignInWithOAuth, mockRpc };
+export {
+  mockGetUser,
+  mockGetSession,
+  mockExchangeCodeForSession,
+  mockSignInWithOAuth,
+  mockSignInWithPassword,
+  mockSignUp,
+  mockRpc
+};
