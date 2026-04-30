@@ -315,10 +315,12 @@ describe('EventDetailsPage', () => {
       await new Promise(r => setTimeout(r, 100));
     });
 
-    const joinBtns = screen.getAllByRole('button');
-    const joinBtn = joinBtns.find(btn => btn.textContent?.includes('event.join_event'));
+    await waitFor(() => {
+      expect(screen.queryByText(/common.loading/i)).toBeNull();
+    });
+    const joinBtn = await screen.findByRole('button', { name: /event.join_event/i });
     await act(async () => {
-      if (joinBtn) fireEvent.click(joinBtn);
+      fireEvent.click(joinBtn);
       await new Promise(r => setTimeout(r, 0));
     });
     expect(__mockInsert).toHaveBeenCalled(); // Since it inserts participant

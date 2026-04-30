@@ -194,13 +194,11 @@ export default function Login() {
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {isRegister && (
                 <div>
-                  <label htmlFor="name-input" className="block text-sm font-medium text-on-surface-variant mb-1">
+                  <label className="block text-sm font-medium text-on-surface-variant mb-1">
                     {t('login.name_label')}
                   </label>
                   <input
-                    id="name-input"
                     type="text"
-                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -211,13 +209,11 @@ export default function Login() {
               )}
 
               <div>
-                <label htmlFor="email-input" className="block text-sm font-medium text-on-surface-variant mb-1">
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   {t('login.email_label')}
                 </label>
                 <input
-                  id="email-input"
                   type="email"
-                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -227,13 +223,11 @@ export default function Login() {
               </div>
 
               <div>
-                <label htmlFor="password-input" className="block text-sm font-medium text-on-surface-variant mb-1">
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   {t('login.password_label')}
                 </label>
                 <input
-                  id="password-input"
                   type="password"
-                  autoComplete={isRegister ? "new-password" : "current-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -245,7 +239,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loadingEmail || loadingGoogle}
-                className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
               >
                 {loadingEmail ? t('common.connecting') : (isRegister ? t('login.sign_up') : t('login.sign_in'))}
               </button>
