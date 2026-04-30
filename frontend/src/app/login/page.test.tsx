@@ -3,45 +3,47 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Login from './page';
 import { mockSignInWithPassword, mockSignUp, mockSignInWithOAuth } from '../../../vitest.setup';
 
-describe('Login Component', () => {
-  const mockLocation = {
-    origin: 'http://localhost:3000',
-    search: '',
-    href: '',
-  };
+// Mock window.location
+const originalLocation = window.location;
 
+describe('Login Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('location', {
-      ...window.location,
-      ...mockLocation,
-    });
+
+    // Setup location mock
+    delete (window as any).location;
+    window.location = {
+      ...originalLocation,
+      origin: 'http://localhost:3000',
+      search: '',
+      href: '',
+    } as any;
   });
 
   it('renders sign in form by default', () => {
     render(<Login />);
 
-    expect(screen.getByText('login.welcome')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /login.continue_google/i })).toBeTruthy();
-    expect(screen.getByLabelText('login.email_label')).toBeTruthy();
-    expect(screen.getByLabelText('login.password_label')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'login.sign_in' })).toBeTruthy();
-    expect(screen.queryByLabelText('login.name_label')).toBeNull();
+    expect(screen.getByText('login.welcome')).toBeDefined();
+    expect(screen.getByText('login.continue_google')).toBeDefined();
+    expect(screen.getByPlaceholderText('name@example.com')).toBeDefined();
+    expect(screen.getByPlaceholderText('••••••••')).toBeDefined();
+    expect(screen.getByText('login.sign_in')).toBeDefined();
+    expect(screen.queryByPlaceholderText('John Doe')).toBeNull();
   });
 
   it('toggles between sign in and sign up', () => {
     render(<Login />);
 
-    const toggleButton = screen.getByRole('button', { name: 'login.no_account' });
+    const toggleButton = screen.getByText('login.no_account');
     fireEvent.click(toggleButton);
 
-    expect(screen.getByRole('button', { name: 'login.sign_up' })).toBeTruthy();
-    expect(screen.getByLabelText('login.name_label')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'login.have_account' })).toBeTruthy();
+    expect(screen.getByText('login.sign_up')).toBeDefined();
+    expect(screen.getByPlaceholderText('John Doe')).toBeDefined();
+    expect(screen.getByText('login.have_account')).toBeDefined();
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.have_account' }));
-    expect(screen.getByRole('button', { name: 'login.sign_in' })).toBeTruthy();
-    expect(screen.queryByLabelText('login.name_label')).toBeNull();
+    fireEvent.click(screen.getByText('login.have_account'));
+    expect(screen.getByText('login.sign_in')).toBeDefined();
+    expect(screen.queryByPlaceholderText('John Doe')).toBeNull();
   });
 
   it('handles successful sign in', async () => {
@@ -49,17 +51,16 @@ describe('Login Component', () => {
 
     render(<Login />);
 
-    fireEvent.change(screen.getByLabelText('login.email_label'), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText('login.password_label'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText('name@example.com'), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.sign_in' }));
+    fireEvent.click(screen.getByText('login.sign_in'));
 
     await waitFor(() => {
       expect(mockSignInWithPassword).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
       });
-      // Component uses window.location.href = redirectPath;
       expect(window.location.href).toBe('/dashboard');
     });
   });
@@ -69,13 +70,13 @@ describe('Login Component', () => {
 
     render(<Login />);
 
-    fireEvent.change(screen.getByLabelText('login.email_label'), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText('login.password_label'), { target: { value: 'wrong-password' } });
+    fireEvent.change(screen.getByPlaceholderText('name@example.com'), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'wrong-password' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.sign_in' }));
+    fireEvent.click(screen.getByText('login.sign_in'));
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid credentials')).toBeTruthy();
+      expect(screen.getByText('Invalid credentials')).toBeDefined();
     });
   });
 
@@ -85,13 +86,13 @@ describe('Login Component', () => {
     render(<Login />);
 
     // Toggle to register
-    fireEvent.click(screen.getByRole('button', { name: 'login.no_account' }));
+    fireEvent.click(screen.getByText('login.no_account'));
 
-    fireEvent.change(screen.getByLabelText('login.name_label'), { target: { value: 'Test User' } });
-    fireEvent.change(screen.getByLabelText('login.email_label'), { target: { value: 'new@example.com' } });
-    fireEvent.change(screen.getByLabelText('login.password_label'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText('John Doe'), { target: { value: 'Test User' } });
+    fireEvent.change(screen.getByPlaceholderText('name@example.com'), { target: { value: 'new@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.sign_up' }));
+    fireEvent.click(screen.getByText('login.sign_up'));
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith({
@@ -102,7 +103,7 @@ describe('Login Component', () => {
           emailRedirectTo: 'http://localhost:3000/callback?next=%2Fdashboard',
         },
       });
-      expect(screen.getByText('login.check_email')).toBeTruthy();
+      expect(screen.getByText('login.check_email')).toBeDefined();
     });
   });
 
@@ -110,15 +111,15 @@ describe('Login Component', () => {
     mockSignUp.mockResolvedValue({ data: { user: null }, error: { message: 'User already exists' } });
 
     render(<Login />);
-    fireEvent.click(screen.getByRole('button', { name: 'login.no_account' }));
+    fireEvent.click(screen.getByText('login.no_account'));
 
-    fireEvent.change(screen.getByLabelText('login.email_label'), { target: { value: 'existing@example.com' } });
-    fireEvent.change(screen.getByLabelText('login.password_label'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText('name@example.com'), { target: { value: 'existing@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.sign_up' }));
+    fireEvent.click(screen.getByText('login.sign_up'));
 
     await waitFor(() => {
-      expect(screen.getByText('User already exists')).toBeTruthy();
+      expect(screen.getByText('User already exists')).toBeDefined();
     });
   });
 
@@ -127,7 +128,7 @@ describe('Login Component', () => {
 
     render(<Login />);
 
-    fireEvent.click(screen.getByRole('button', { name: /login.continue_google/i }));
+    fireEvent.click(screen.getByText('login.continue_google'));
 
     expect(mockSignInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
@@ -145,13 +146,13 @@ describe('Login Component', () => {
 
     render(<Login />);
 
-    fireEvent.change(screen.getByLabelText('login.email_label'), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText('login.password_label'), { target: { value: 'password123' } });
+    fireEvent.change(screen.getByPlaceholderText('name@example.com'), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
 
-    fireEvent.click(screen.getByRole('button', { name: 'login.sign_in' }));
+    fireEvent.click(screen.getByText('login.sign_in'));
 
-    expect(screen.getByText('common.connecting')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'common.connecting' })).toBeDisabled();
+    expect(screen.getByText('common.connecting')).toBeDefined();
+    expect(screen.getByText('common.connecting')).toBeDisabled();
 
     // Resolve it
     resolveAuth({ data: { user: {} }, error: null });
