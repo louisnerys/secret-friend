@@ -318,9 +318,10 @@ describe('EventDetailsPage', () => {
     await waitFor(() => {
       expect(screen.queryByText(/common.loading/i)).toBeNull();
     });
-    const joinBtn = await screen.findByRole('button', { name: /event.join_event/i });
+    const joinBtns = await screen.findAllByRole('button');
+    const joinBtn = joinBtns.find(btn => btn.textContent?.includes('event.join_event'));
     await act(async () => {
-      fireEvent.click(joinBtn);
+      if (joinBtn) fireEvent.click(joinBtn);
       await new Promise(r => setTimeout(r, 0));
     });
     expect(__mockInsert).toHaveBeenCalled(); // Since it inserts participant

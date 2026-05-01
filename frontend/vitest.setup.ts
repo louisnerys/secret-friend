@@ -1,4 +1,5 @@
 import { vi, beforeEach, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 export const mockPush = vi.fn();
 export const mockReplace = vi.fn();
@@ -130,7 +131,12 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
+  vi.unstubAllGlobals();
+  if (typeof document !== 'undefined') {
+    document.body.innerHTML = '';
+  }
 });
 
 export {
