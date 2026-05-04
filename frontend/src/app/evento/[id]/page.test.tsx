@@ -121,6 +121,7 @@ describe('EventDetailsPage', () => {
         },
       });
     }
+    __mockOrder.mockResolvedValue({ data: [], error: null });
   });
 
   afterEach(() => {
@@ -423,6 +424,64 @@ describe('EventDetailsPage', () => {
     vi.useRealTimers();
   });
 
+  it('handles join error', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-2' }, error: null }) });
+    __mockMaybeSingle.mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-2' }, error: null });
+    __mockEq.mockReset();
+    __mockEq.mockResolvedValue({ data: [], error: null });
+
+    __mockInsert.mockResolvedValue({ error: { message: 'DB Error' } });
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+
+    const joinBtn = await screen.findByText('event.join_event');
+    await act(async () => {
+        fireEvent.click(joinBtn);
+    });
+
+    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('DB Error'));
+  });
+
+  it('handles draw error', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null }) });
+    __mockMaybeSingle.mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null });
+    __mockEq.mockReset();
+    __mockEq.mockResolvedValue({ data: [{ user_id: '1' }, { user_id: '2' }, { user_id: '3' }], error: null }); // 3 participants to enable draw
+
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+
+    const drawBtn = await screen.findByText('event.draw_now');
+    const drawBtnParent = drawBtn.closest('button');
+    await act(async () => {
+        fireEvent.click(drawBtnParent!);
+    });
+
+    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('event.draw_error'));
+  });
+
+  it('allows sending a mural message', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null }) });
+    __mockMaybeSingle.mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null });
+    __mockEq.mockReset();
+    __mockEq.mockResolvedValue({ data: [{ user_id: 'user-1', users: { name: 'User 1' } }], error: null });
+
+    __mockInsert.mockResolvedValue({ error: null });
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+
+    const input = await screen.findByPlaceholderText('event.mural_placeholder');
+    fireEvent.change(input, { target: { value: 'Test Message' } });
+
+    const form = input.closest('form');
+    await act(async () => {
+        fireEvent.submit(form!);
+    });
+
+    expect(__mockInsert).toHaveBeenCalled();
+  });
+
   it('handles exclusion groups as admin', async () => {
     __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null }) });
     // Mock initial data load
@@ -465,7 +524,45 @@ describe('EventDetailsPage', () => {
     });
     expect(__mockInsert).toHaveBeenCalled();
 
+    // Delete exclusion group
+    const deleteBtns = await screen.findAllByLabelText('common.delete');
+    __mockDelete.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+    await act(async () => {
+        fireEvent.click(deleteBtns[0]);
+    });
+    expect(__mockDelete).toHaveBeenCalled();
+
     vi.useRealTimers();
+  });
+
+  it('allows interacting with wishlist', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null }) });
+    
+    __mockEq.mockResolvedValue({ data: [{ user_id: 'user-1', users: { name: 'User 1' }, wishlist: 'old list' }], error: null });
+    __mockOrder.mockResolvedValue({ data: [], error: null });
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+
+    // Wait for the wishlist header to appear
+    await screen.findByText('event.my_wishlist');
+
+    // Open wishlist editor
+    const editBtn = await screen.findByRole('button', { name: /event\.edit/i });
+    await act(async () => {
+        fireEvent.click(editBtn);
+    });
+
+    // Change wishlist
+    const input = await screen.findByPlaceholderText('event.wishlist_placeholder');
+    fireEvent.change(input, { target: { value: 'New Wishlist Item' } });
+
+    // Save wishlist
+    const saveBtn = await screen.findByText('common.save');
+    __mockUpdate.mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }) });
+    await act(async () => {
+        fireEvent.click(saveBtn);
+    });
+    expect(__mockUpdate).toHaveBeenCalled();
   });
 
   it('handles wishlist save error', async () => {
@@ -492,5 +589,40 @@ describe('EventDetailsPage', () => {
 
     expect(alertSpy).toHaveBeenCalled();
     vi.useRealTimers();
+  });
+
+  it('does not submit mural message when input is empty', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null }) });
+    __mockEq.mockResolvedValue({ data: [{ user_id: 'user-1', users: { name: 'User 1' } }], error: null });
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+
+    const input = await screen.findByPlaceholderText('event.mural_placeholder');
+    // Leave input empty — exercises the `!newMuralMsg.trim()` early-return branch
+    const form = input.closest('form');
+    await act(async () => {
+      fireEvent.submit(form!);
+    });
+
+    expect(__mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('join success opens wishlist editing', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-2' }, error: null }) });
+    __mockMaybeSingle.mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-2' }, error: null });
+    __mockEq.mockReset();
+    __mockEq.mockResolvedValue({ data: [], error: null });
+    // Successful insert → exercises the `!error` path which calls setIsEditingWishlist(true)
+    __mockInsert.mockResolvedValue({ error: null });
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+
+    const joinBtn = await screen.findByText('event.join_event');
+    await act(async () => {
+      fireEvent.click(joinBtn);
+    });
+
+    // Wishlist editor appears after successful join
+    expect(__mockInsert).toHaveBeenCalled();
   });
 });

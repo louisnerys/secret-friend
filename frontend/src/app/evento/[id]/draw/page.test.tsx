@@ -90,4 +90,90 @@ describe('DrawPage', () => {
     
     expect(handleSendMessage).toHaveBeenCalled();
   });
+
+  it('renders messages correctly depending on who sent them', () => {
+    const messages = [
+      { id: '1', text: 'Hello', is_mine: true, sender_display: 'Você' },
+      { id: '2', text: 'Hi', is_mine: false, sender_display: 'Bob' },
+    ];
+    vi.mocked(useEventDrawController).mockReturnValue({
+      ...mockController,
+      filteredMessages: messages as any,
+      activeChat: 'drawer'
+    } as any);
+
+    const { getByText } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    
+    expect(getByText('Hello')).toBeDefined();
+    expect(getByText('Hi')).toBeDefined();
+    // Test the "You" translation logic
+    expect(getByText('common.you')).toBeDefined();
+  });
+
+  it('triggers router push when back button is clicked', () => {
+    const push = vi.fn();
+    vi.mocked(useEventDrawController).mockReturnValue({ ...mockController, router: { push } } as any);
+    const { getByLabelText } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    fireEvent.click(getByLabelText('common.back'));
+    expect(push).toHaveBeenCalledWith('/evento/evt-1');
+  });
+
+  it('triggers setRevealed correctly', () => {
+    const setRevealed = vi.fn();
+    vi.mocked(useEventDrawController).mockReturnValue({ ...mockController, setRevealed, revealed: false } as any);
+    const { getByText, rerender } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    
+    // Test true
+    fireEvent.click(getByText('draw.reveal_name'));
+    expect(setRevealed).toHaveBeenCalledWith(true);
+
+    // Test false
+    vi.mocked(useEventDrawController).mockReturnValue({ ...mockController, setRevealed, revealed: true } as any);
+    rerender(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    fireEvent.click(getByText('draw.hide'));
+    expect(setRevealed).toHaveBeenCalledWith(false);
+  });
+
+  it('triggers setNewMessage on input change', () => {
+    const setNewMessage = vi.fn();
+    vi.mocked(useEventDrawController).mockReturnValue({ ...mockController, setNewMessage } as any);
+    const { getByPlaceholderText } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    
+    fireEvent.change(getByPlaceholderText('draw.placeholder'), { target: { value: 'New Test Message' } });
+    expect(setNewMessage).toHaveBeenCalledWith('New Test Message');
+  });
+
+  it('switches tabs to my drawn', () => {
+    const setActiveChat = vi.fn();
+    vi.mocked(useEventDrawController).mockReturnValue({ ...mockController, setActiveChat } as any);
+
+    const { getByText } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    fireEvent.click(getByText('draw.tab_my_drawn'));
+    
+    expect(setActiveChat).toHaveBeenCalledWith('drawn');
+  });
+
+  it('shows ??? when myDrawn is null and revealed', () => {
+    vi.mocked(useEventDrawController).mockReturnValue({
+      ...mockController,
+      revealed: true,
+      myDrawn: null, // exercises the `|| '???'` branch on line 102
+    } as any);
+
+    const { getByText } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    expect(getByText('???')).toBeDefined();
+  });
+
+  it('renders non-Você sender_display as-is', () => {
+    const messages = [
+      { id: '3', text: 'Hey', is_mine: false, sender_display: 'Alice' }, // not 'Você' → exercises false branch of ternary
+    ];
+    vi.mocked(useEventDrawController).mockReturnValue({
+      ...mockController,
+      filteredMessages: messages as any,
+    } as any);
+
+    const { getByText } = render(<DrawPage params={Promise.resolve({ id: 'evt-1' })} />);
+    expect(getByText('Alice')).toBeDefined();
+  });
 });

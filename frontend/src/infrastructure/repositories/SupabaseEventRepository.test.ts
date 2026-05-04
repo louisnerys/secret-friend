@@ -148,6 +148,36 @@ describe('SupabaseEventRepository', () => {
     expect(mockUpdate).toHaveBeenCalledWith({ reactions: { u1: '👍' } });
   });
 
+  it('toggleLike removes like when reaction already exists', async () => {
+    const mockMsg = { id: 'm1', reactions: { u1: '👍' } }; // reaction exists → delete branch
+    const mockUpdate = vi.fn().mockReturnThis();
+    const mockEq = vi.fn().mockReturnThis();
+
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: mockMsg, error: null }),
+    } as any).mockReturnValueOnce({
+      update: mockUpdate,
+      eq: mockEq,
+      then: (cb: any) => cb({ error: null })
+    } as any);
+
+    await repo.toggleLike('m1', 'u1');
+    expect(mockUpdate).toHaveBeenCalledWith({ reactions: {} }); // reaction removed
+  });
+
+  it('toggleLike returns error when message not found', async () => {
+    mockFrom.mockReturnValueOnce({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }), // !msg branch
+    } as any);
+
+    const result = await repo.toggleLike('m1', 'u1');
+    expect(result.error).toBeInstanceOf(Error);
+  });
+
   it('createExclusionGroup calls insert', async () => {
     const mockChain = { insert: vi.fn().mockResolvedValue({ error: null }) };
     mockFrom.mockReturnValue(mockChain as any);
@@ -175,7 +205,7 @@ describe('SupabaseEventRepository', () => {
     expect(mockFrom).toHaveBeenCalledWith('exclusion_group_members');
   });
 
-  it('getPrivateMessages uses correct filters', async () => {
+  it('getPrivateMessages uses correct filters with drawnId', async () => {
     const mockChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -185,6 +215,18 @@ describe('SupabaseEventRepository', () => {
     mockFrom.mockReturnValue(mockChain as any);
     await repo.getPrivateMessages('e1', 'u1', 'u2');
     expect(mockChain.or).toHaveBeenCalled();
+  });
+
+  it('getPrivateMessages uses correct filters without drawnId', async () => {
+    const mockChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [], error: null })
+    };
+    mockFrom.mockReturnValue(mockChain as any);
+    await repo.getPrivateMessages('e1', 'u1', null);
+    expect(mockChain.eq).toHaveBeenCalledWith('receiver_id', 'u1');
   });
 
   it('sendAnonymousMessage calls rpc', async () => {

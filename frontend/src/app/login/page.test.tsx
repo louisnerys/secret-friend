@@ -168,6 +168,19 @@ describe('Login Component', () => {
     });
   });
 
+  it('handles google social login error', async () => {
+    const { container } = render(<Login />);
+
+    mockSignInWithOAuth.mockResolvedValue({ data: { url: null }, error: { message: 'OAuth failed' } });
+    await act(async () => {
+      fireEvent.click(container.querySelector('#google-login-button')!);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('OAuth failed')).toBeDefined();
+    });
+  });
+
   it('shows loading state during email auth', async () => {
     // Return a promise that doesn't resolve immediately
     let resolveAuth: any;

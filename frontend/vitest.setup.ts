@@ -15,6 +15,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => key,
     i18n: { language: 'en', changeLanguage: vi.fn() }
   }),
+  I18nextProvider: ({ children }: any) => children,
 }));
 
 export const mockSingle = vi.fn();
