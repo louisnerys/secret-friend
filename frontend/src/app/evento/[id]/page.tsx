@@ -254,13 +254,15 @@ export default function EventDetalhes(props: EventPageProps) {
                 onClick={() => setIsManagingExclusions(!isManagingExclusions)}
                 className="text-primary hover:bg-surface-container p-2 rounded-full transition-colors flex items-center justify-center"
                 aria-label={t('event.toggle_exclusions')}
+                aria-expanded={isManagingExclusions}
+                aria-controls="exclusions-panel"
               >
                 <MSO>{isManagingExclusions ? 'expand_less' : 'expand_more'}</MSO>
               </button>
             </div>
 
             {isManagingExclusions && (
-              <div className="bg-surface-container rounded-2xl p-4 space-y-4">
+              <div id="exclusions-panel" className="bg-surface-container rounded-2xl p-4 space-y-4">
                 <div className="flex gap-2">
                   <input
                     type="text"
