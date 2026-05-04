@@ -94,12 +94,7 @@ vi.mock('@/lib/supabase', () => {
          }
          return builder;
       }),
-      rpc: vi.fn().mockImplementation((name, args) => {
-         if (name === 'get_public_event') {
-           return { maybeSingle: mockMaybeSingle };
-         }
-         return { error: null };
-      }),
+      rpc: mockRpc,
       channel: vi.fn(() => ({
         on: vi.fn().mockReturnThis(),
         subscribe: vi.fn(),
@@ -289,7 +284,9 @@ describe('EventDetailsPage', () => {
     });
 
     const roomBtn = screen.getByRole('button', { name: /event.nav_draw/i });
-    fireEvent.click(roomBtn);
+    await act(async () => {
+      fireEvent.click(roomBtn);
+    });
     expect(mockPush).toHaveBeenCalledWith('/evento/evt-1/draw');
   });
 
@@ -315,7 +312,13 @@ describe('EventDetailsPage', () => {
       await new Promise(r => setTimeout(r, 100));
     });
 
-    const joinBtns = screen.getAllByRole('button');
+    let joinBtns: HTMLElement[] = [];
+    await waitFor(() => {
+      joinBtns = screen.getAllByRole('button');
+      const joinBtn = joinBtns.find(btn => btn.textContent?.includes('event.join_event'));
+      expect(joinBtn).toBeDefined();
+    });
+
     const joinBtn = joinBtns.find(btn => btn.textContent?.includes('event.join_event'));
     await act(async () => {
       if (joinBtn) fireEvent.click(joinBtn);

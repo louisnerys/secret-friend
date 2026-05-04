@@ -153,6 +153,7 @@ export default function Login() {
 
             {/* Google Login Button */}
             <button
+              id="google-login-button"
               onClick={() => handleSocialLogin('google')}
               disabled={loadingGoogle || loadingEmail}
               className="flex items-center justify-center gap-3 w-full py-4 bg-white text-gray-800 rounded-full border border-gray-300 font-bold tracking-tight hover:bg-gray-50 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -244,6 +245,7 @@ export default function Login() {
 
               <button
                 type="submit"
+                id="login-submit-button"
                 disabled={loadingEmail || loadingGoogle}
                 className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
@@ -259,9 +261,9 @@ export default function Login() {
 
             <div className="mt-6 text-center">
               <button
-                type="button"
+                id="auth-toggle-button"
                 onClick={() => setIsRegister(!isRegister)}
-                className="text-sm font-medium text-primary hover:underline"
+                className="text-primary font-bold hover:underline"
               >
                 {isRegister ? t('login.have_account') : t('login.no_account')}
               </button>
