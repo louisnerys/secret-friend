@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import CallbackPage from './page';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { Suspense } from 'react';
@@ -75,5 +75,41 @@ describe('CallbackPage', () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/login?error=callback_failed');
     });
+  });
+
+  it('handles auth state change if session is not immediately found', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    
+    let callback: any;
+    mockOnAuthStateChange.mockImplementation((cb: any) => {
+      callback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+
+    render(<CallbackPage />);
+
+    // Wait a tick
+    await waitFor(() => expect(mockOnAuthStateChange).toHaveBeenCalled());
+    
+    // Simulate auth event
+    callback('SIGNED_IN', { user: { id: '1' } });
+
+    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('redirects to login after timeout if no session found', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    mockOnAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
+
+    render(<CallbackPage />);
+
+    // Run all timers and microtasks
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
+    expect(mockPush).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });
