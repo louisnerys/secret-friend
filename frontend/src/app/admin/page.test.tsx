@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AdminDashboard from './page';
 import { supabase } from '@/lib/supabase';
-import React from 'react';
+import { mockGetUser, mockRpc } from '../../../vitest.setup';
 
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => ({
@@ -13,30 +13,18 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }));
 
-// We'll mock the hook to avoid the setTimeout inside useEffect
-vi.mock('react', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react')>();
-  return {
-    ...actual,
-    useEffect: (fn: any, deps: any) => {
-       // Just call it immediately synchronously for tests
-       fn();
-    }
-  };
-});
-
 describe('AdminDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders metrics correctly', async () => {
-    (supabase.auth.getUser as any) = vi.fn().mockResolvedValue({
+    mockGetUser.mockResolvedValue({
       data: { user: { id: 'user-1', email: 'test@example.com' } },
       error: null,
     });
 
-    (supabase.rpc as any) = vi.fn().mockResolvedValue({
+    mockRpc.mockResolvedValue({
       data: {
         mau: 100,
         messages_24h: 50,
@@ -58,16 +46,16 @@ describe('AdminDashboard', () => {
 
     await waitFor(() => {
       expect(screen.queryByText(/100/i)).not.toBeNull();
-    }, { timeout: 3000 });
+    });
   });
 
   it('handles error state', async () => {
-    (supabase.auth.getUser as any) = vi.fn().mockResolvedValue({
+    mockGetUser.mockResolvedValue({
       data: { user: { id: 'user-1', email: 'test@example.com' } },
       error: null,
     });
 
-    (supabase.rpc as any) = vi.fn().mockResolvedValue({
+    mockRpc.mockResolvedValue({
       data: null,
       error: { message: "Test Error" },
     });
@@ -76,15 +64,35 @@ describe('AdminDashboard', () => {
 
     await waitFor(() => {
       expect(screen.queryByText(/Test Error/i)).not.toBeNull();
-    }, { timeout: 3000 });
+    });
   });
 
   it('handles missing user', async () => {
-    (supabase.auth.getUser as any) = vi.fn().mockResolvedValue({
+    mockGetUser.mockResolvedValue({
       data: { user: null },
       error: null,
     });
 
     render(<AdminDashboard />);
+    // Should stay in loading or redirect (which is mocked)
+  });
+
+  it('calls alert when make-me-admin is clicked', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'u1' } },
+      error: null,
+    });
+    // Trigger error state to show the "how_to_admin" button
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'Denied' } });
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    render(<AdminDashboard />);
+    
+    await waitFor(() => {
+      const btn = screen.getByText('admin.how_to_admin');
+      fireEvent.click(btn);
+      expect(alertSpy).toHaveBeenCalled();
+    });
+    alertSpy.mockRestore();
   });
 });

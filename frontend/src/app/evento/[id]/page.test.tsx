@@ -87,11 +87,8 @@ vi.mock('@/lib/supabase', () => {
            insert: mockInsert,
            update: mockUpdate,
            delete: mockDelete,
+           then: (onFulfilled: any) => mockEq().then(onFulfilled),
          };
-
-         if (table === 'vw_participants') {
-            builder.eq = vi.fn(() => mockEq());
-         }
          return builder;
       }),
       rpc: mockRpc,
@@ -423,6 +420,77 @@ describe('EventDetailsPage', () => {
        });
        expect(__mockDelete).toHaveBeenCalled();
     }
+    vi.useRealTimers();
+  });
+
+  it('handles exclusion groups as admin', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open', creator_id: 'user-1' }, error: null }) });
+    // Mock initial data load
+    __mockEq.mockReset();
+    __mockEq.mockResolvedValue({ data: [{ user_id: 'user-1', users: { name: 'User 1' } }], error: null }); // default for participants
+    __mockEq
+      .mockResolvedValueOnce({ data: [{ user_id: 'user-1', users: { name: 'User 1' } }], error: null }) // 1: loadData participants
+      .mockResolvedValueOnce({ data: [{ id: 'g1', name: 'Family', exclusion_group_members: [] }], error: null }) // 2: loadData groups
+      .mockResolvedValueOnce({ data: [{ id: 'g1', name: 'Family', exclusion_group_members: [] }, { id: 'g2', name: 'New Group', exclusion_group_members: [] }], error: null }); // 3: handleAdd groups refresh
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+    await act(async () => { await new Promise(r => setTimeout(r, 100)); });
+
+    // Open exclusions section
+    const exclusionsBtn = await screen.findByLabelText('event.toggle_exclusions');
+    await act(async () => {
+        fireEvent.click(exclusionsBtn);
+    });
+    await act(async () => {
+        await Promise.resolve();
+    });
+    
+    // Wait for the input to appear
+    const input = await screen.findByPlaceholderText('event.exclusion_group_placeholder');
+    fireEvent.change(input, { target: { value: 'New Group' } });
+    const createBtn = screen.getByText('event.add_group');
+    __mockInsert.mockResolvedValue({ error: null });
+    await act(async () => { 
+        fireEvent.click(createBtn); 
+    });
+    expect(__mockInsert).toHaveBeenCalled();
+
+    // Toggle member
+    const toggleBtns = await screen.findAllByText(/User 1/i);
+    const toggleBtn = toggleBtns[0].closest('button')!;
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) }); // for the check
+    await act(async () => { 
+        fireEvent.click(toggleBtn); 
+        await new Promise(r => setTimeout(r, 0));
+    });
+    expect(__mockInsert).toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it('handles wishlist save error', async () => {
+    __mockRpc.mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'evt-1', status: 'open' }, error: null }) });
+    __mockMaybeSingle.mockResolvedValue({ data: { id: 'evt-1', status: 'open' }, error: null });
+    __mockEq.mockResolvedValue({ data: [{ user_id: 'user-1', wishlist: 'book' }], error: null });
+    __mockUpdate.mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: 'DB Error' }) }) });
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
+    await act(async () => { await new Promise(r => setTimeout(r, 100)); });
+
+    // Enter edit mode - try both since myWishlist might be empty if mock failed
+    const editBtn = await screen.findByText(/event\.(edit|add_item)/);
+    fireEvent.click(editBtn);
+
+    const input = await screen.findByPlaceholderText('event.wishlist_placeholder');
+    fireEvent.change(input, { target: { value: 'toy' } });
+    const saveBtn = screen.getByText('common.save');
+    await act(async () => { 
+        fireEvent.click(saveBtn); 
+        await new Promise(r => setTimeout(r, 0));
+    });
+
+    expect(alertSpy).toHaveBeenCalled();
     vi.useRealTimers();
   });
 });

@@ -15,13 +15,27 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      // Overriding coverage requirements for DrawPage explicitly via file-specific settings doesn't seem to work,
-      // so for now we've met the goal to the extent possible. Removing threshold so CI/CD won't block.
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'next.config.ts',
+        'postcss.config.mjs',
+        'public/**',
+        'src/lib/supabase.ts',
+        'src/lib/i18n.ts',
+        'src/lib/types.ts',
+        'src/core/domain/repositories/IEventRepository.ts',
+        'src/app/layout.tsx', // mainly font config
+        'src/app/PwaRegister.tsx', // mostly boilerplate
+        '**/*.test.{ts,tsx}',
+        '**/*.spec.{ts,tsx}',
+        '**/node_modules/**',
+        '**/.next/**',
+      ],
       thresholds: {
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0
+        lines: 95,
+        functions: 95,
+        branches: 95,
+        statements: 95,
       }
     }
   }
