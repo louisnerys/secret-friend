@@ -1,4 +1,5 @@
 import { vi, beforeEach, afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 export const mockPush = vi.fn();
 export const mockReplace = vi.fn();
@@ -14,6 +15,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => key,
     i18n: { language: 'en', changeLanguage: vi.fn() }
   }),
+  I18nextProvider: ({ children }: any) => children,
 }));
 
 export const mockSingle = vi.fn();
@@ -22,6 +24,7 @@ export const mockSelect = vi.fn();
 export const mockEq = vi.fn();
 export const mockIn = vi.fn();
 export const mockOrder = vi.fn();
+export const mockOr = vi.fn();
 export const mockUpdate = vi.fn();
 export const mockDelete = vi.fn();
 export const mockMaybeSingle = vi.fn();
@@ -32,6 +35,7 @@ export const chain: any = {
   eq: mockEq,
   in: mockIn,
   order: mockOrder,
+  or: mockOr,
   update: mockUpdate,
   delete: mockDelete,
   insert: mockInsert,
@@ -46,6 +50,7 @@ mockSelect.mockReturnValue(chain);
 mockEq.mockReturnValue(chain);
 mockIn.mockReturnValue(chain);
 mockOrder.mockReturnValue(chain);
+mockOr.mockReturnValue(chain);
 mockUpdate.mockReturnValue(chain);
 mockDelete.mockReturnValue(chain);
 mockInsert.mockReturnValue(chain);
@@ -53,37 +58,35 @@ mockInsert.mockReturnValue(chain);
 mockSingle.mockImplementation(() => Promise.resolve({ data: { id: 'evt-1', name: 'Event 1' }, error: null }));
 mockMaybeSingle.mockImplementation(() => Promise.resolve({ data: { id: 'evt-1', name: 'Event 1' }, error: null }));
 
-const mockGetUser = vi.fn();
-const mockGetSession = vi.fn();
-const mockExchangeCodeForSession = vi.fn();
-const mockSignInWithOAuth = vi.fn();
-const mockSignInWithPassword = vi.fn();
-const mockSignUp = vi.fn();
+export const mockGetUser = vi.fn();
+export const mockGetSession = vi.fn();
+export const mockExchangeCodeForSession = vi.fn();
+export const mockSignInWithOAuth = vi.fn();
+export const mockSignInWithPassword = vi.fn();
+export const mockSignUp = vi.fn();
 const mockChannelOn = vi.fn().mockReturnThis();
 const mockChannelSubscribe = vi.fn();
-const mockInvoke = vi.fn();
-const mockRpc = vi.fn();
+export const mockInvoke = vi.fn();
+export const mockRpc = vi.fn();
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
-      getSession: (...args: any[]) => mockGetSession(...args),
-      getUser: (...args: any[]) => mockGetUser(...args),
+      getSession: mockGetSession,
+      getUser: mockGetUser,
       onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       signOut: vi.fn(),
-      exchangeCodeForSession: (...args: any[]) => mockExchangeCodeForSession(...args),
-      signInWithOAuth: (...args: any[]) => mockSignInWithOAuth(...args),
-      signInWithPassword: (...args: any[]) => mockSignInWithPassword(...args),
-      signUp: (...args: any[]) => mockSignUp(...args),
+      exchangeCodeForSession: mockExchangeCodeForSession,
+      signInWithOAuth: mockSignInWithOAuth,
+      signInWithPassword: mockSignInWithPassword,
+      signUp: mockSignUp,
     },
     from: vi.fn(() => chain),
     rpc: vi.fn((...args: any[]) => {
-      // Mock rpc normally but also return chain so .maybeSingle() works
-      const res = mockRpc(...args);
-      if (res && res.then) {
-         return res;
-      }
-      return chain;
+      const promise: any = mockRpc(...args);
+      promise.maybeSingle = vi.fn().mockReturnValue(promise);
+      promise.single = vi.fn().mockReturnValue(promise);
+      return promise;
     }),
     channel: vi.fn(() => ({
       on: mockChannelOn,
@@ -130,15 +133,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
 });
 
-export {
-  mockGetUser,
-  mockGetSession,
-  mockExchangeCodeForSession,
-  mockSignInWithOAuth,
-  mockSignInWithPassword,
-  mockSignUp,
-  mockRpc
-};
