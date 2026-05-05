@@ -110,6 +110,8 @@
     "event_mural": "Event Mural",
     "mural_placeholder": "Write on the mural...",
     "mural_empty": "Be the first to leave a message on the mural!",
+    "like_message": "Like message",
+    "unlike_message": "Unlike message",
     "nav_events": "Events",
     "nav_list": "List",
     "nav_draw": "Draw",

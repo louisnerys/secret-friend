@@ -379,6 +379,7 @@ export default function EventDetalhes(props: EventPageProps) {
                     <button
                       onClick={() => handleToggleLike(msg.id!)}
                       className={`text-sm py-1.5 px-3 rounded-full border transition-colors flex items-center gap-1.5 ${isLiked ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high'}`}
+                      aria-label={isLiked ? t('event.unlike_message') : t('event.like_message')}
                     >
                       <span aria-hidden="true">👍</span>
                       {totalLikes > 0 && <span className="font-medium">{totalLikes}</span>}

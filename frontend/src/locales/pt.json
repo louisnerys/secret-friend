@@ -110,6 +110,8 @@
     "event_mural": "Mural do Evento",
     "mural_placeholder": "Escreva no mural...",
     "mural_empty": "Seja o primeiro a deixar uma mensagem no mural!",
+    "like_message": "Curtir mensagem",
+    "unlike_message": "Descurtir mensagem",
     "nav_events": "Eventos",
     "nav_list": "Lista",
     "nav_draw": "Sorteio",

@@ -5,3 +5,6 @@
 ## 2024-05-02 - Accordion/Toggle Accessibility
 **Learning:** Icon-only accordion toggles need more than just visual cues. Without `aria-expanded` and `aria-controls`, screen readers don't understand the relationship between the button and the panel it toggles.
 **Action:** Always add `aria-expanded` (boolean), `aria-controls` (panel ID), and a descriptive `aria-label` to expandable section toggle buttons.
+## 2024-05-05 - Missing Aria Label on Icon-only button
+**Learning:** The "Like" button (👍) on mural messages was implemented as an icon-only button without an `aria-label`, making its purpose unclear to screen reader users. Also, since it acts as a toggle, the label should reflect the current state (e.g., "Like message" vs. "Unlike message").
+**Action:** When adding icon-only buttons, especially those that toggle state, ensure an `aria-label` is provided and dynamically updated to reflect the action the button will perform in its current state. Add appropriate translation strings to the `.json` files.
