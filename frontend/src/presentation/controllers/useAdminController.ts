@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
-import { AdminMetrics } from '@/lib/types';
-import { eventRepository } from '@/infrastructure/repositories/SupabaseEventRepository';
-import { AdminUseCase } from '@/core/application/usecases/AdminUseCase';
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
+import { AdminMetrics } from "@/lib/types";
+import { eventRepository } from "@/infrastructure/repositories/SupabaseEventRepository";
+import { AdminUseCase } from "@/core/application/usecases/AdminUseCase";
 
 const adminUseCase = new AdminUseCase(eventRepository);
 
@@ -17,13 +17,16 @@ export function useAdminController() {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
 
-      const { data, error: metricsError } = await adminUseCase.getAdminMetrics();
+      const { data, error: metricsError } =
+        await adminUseCase.getAdminMetrics();
 
       if (metricsError) {
         throw metricsError;
@@ -31,8 +34,10 @@ export function useAdminController() {
 
       setMetrics(data as AdminMetrics);
     } catch (err: any) {
-      console.error('Error loading admin metrics:', err);
-      setError(err.message || 'Erro ao carregar métricas. Você é um administrador?');
+      console.error("Error loading admin metrics:", err);
+      setError(
+        err.message || "Erro ao carregar métricas. Você é um administrador?",
+      );
     } finally {
       setLoading(false);
     }
@@ -43,7 +48,9 @@ export function useAdminController() {
   }, [fetchMetrics]);
 
   const handleMakeMeAdmin = async () => {
-    alert('Para testar, atualize a coluna is_admin do seu usuário para true diretamente no banco de dados.');
+    alert(
+      "Para testar, atualize a coluna is_admin do seu usuário para true diretamente no banco de dados.",
+    );
   };
 
   return {
@@ -52,6 +59,6 @@ export function useAdminController() {
     loading,
     error,
     router,
-    handleMakeMeAdmin
+    handleMakeMeAdmin,
   };
 }

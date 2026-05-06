@@ -13,7 +13,7 @@ export interface Event {
   id: string;
   name: string;
   description: string;
-  status: 'open' | 'drawn' | 'closed';
+  status: "open" | "drawn" | "closed";
   reveal_date?: string;
   creator_id: string;
 }
@@ -23,11 +23,13 @@ export interface Participant {
   event_id?: string;
   drawn_id?: string;
   wishlist?: string;
-  users?: {
-    name: string;
-  } | {
-    name: string;
-  }[];
+  users?:
+    | {
+        name: string;
+      }
+    | {
+        name: string;
+      }[];
 }
 
 export interface Message {
@@ -37,11 +39,13 @@ export interface Message {
   text: string;
   reactions: Record<string, string>;
   created_at: string;
-  users?: {
-    name: string;
-  } | {
-    name: string;
-  }[];
+  users?:
+    | {
+        name: string;
+      }
+    | {
+        name: string;
+      }[];
 }
 
 export interface PrivateMessage {
@@ -50,7 +54,7 @@ export interface PrivateMessage {
   sender_id: string;
   receiver_id: string;
   text: string;
-  chat_type: 'drawn' | 'drawer';
+  chat_type: "drawn" | "drawer";
   sender_display: string;
   is_mine?: boolean;
   created_at: string;
