@@ -23,12 +23,13 @@ function smartDraw(
   exclusions: Exclusion[],
 ): Map<string, string> | null {
   const ids = participants.map((p) => p.user_id);
-  const forbidden = new Set<string>(
-    exclusions.flatMap((e) => [
-      `${e.user_a_id}->${e.user_b_id}`,
-      `${e.user_b_id}->${e.user_a_id}`,
-    ]),
-  );
+  const forbidden = new Map<string, Set<string>>();
+  for (const e of exclusions) {
+    if (!forbidden.has(e.user_a_id)) forbidden.set(e.user_a_id, new Set());
+    forbidden.get(e.user_a_id)!.add(e.user_b_id);
+    if (!forbidden.has(e.user_b_id)) forbidden.set(e.user_b_id, new Set());
+    forbidden.get(e.user_b_id)!.add(e.user_a_id);
+  }
 
   const assignment = new Map<string, string>(); // giver -> receiver
   const receiverUsed = new Set<string>();
@@ -39,7 +40,7 @@ function smartDraw(
     // Cannot draw someone already assigned
     if (receiverUsed.has(receiver)) return false;
     // Cannot draw a forbidden pair
-    if (forbidden.has(`${giver}->${receiver}`)) return false;
+    if (forbidden.get(giver)?.has(receiver)) return false;
     // Non-reciprocity: if someone already has giver as their receiver, giver cannot draw them
     if (assignment.get(receiver) === giver) return false;
     return true;
