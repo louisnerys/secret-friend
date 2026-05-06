@@ -1,10 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 interface Participant {
   id: string;
   user_id: string;
@@ -82,6 +77,19 @@ function smartDraw(
 }
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get("Origin");
+  const allowedOrigins = [
+    "http://localhost:3000",
+    Deno.env.get("ALLOWED_ORIGIN"),
+  ].filter(Boolean) as string[];
+
+  const corsHeaders = {
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    ...(origin && allowedOrigins.includes(origin)
+      ? { "Access-Control-Allow-Origin": origin }
+      : { "Access-Control-Allow-Origin": allowedOrigins[0] || "*" }),
+  };
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

@@ -1,21 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function Login() {
   const { t } = useTranslation();
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +23,7 @@ export default function Login() {
     setSuccessMsg(null);
 
     const searchParams = new URLSearchParams(window.location.search);
-    const redirectPath = searchParams.get('redirect') || '/dashboard';
+    const redirectPath = searchParams.get("redirect") || "/dashboard";
     const redirectTo = `${window.location.origin}/callback?next=${encodeURIComponent(redirectPath)}`;
 
     if (isRegister) {
@@ -42,7 +41,7 @@ export default function Login() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccessMsg(t('login.check_email'));
+        setSuccessMsg(t("login.check_email"));
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({
@@ -60,12 +59,12 @@ export default function Login() {
     setLoadingEmail(false);
   };
 
-  const handleSocialLogin = async (provider: 'google') => {
-    if (provider === 'google') setLoadingGoogle(true);
+  const handleSocialLogin = async (provider: "google") => {
+    if (provider === "google") setLoadingGoogle(true);
     setError(null);
 
     const searchParams = new URLSearchParams(window.location.search);
-    const redirectPath = searchParams.get('redirect') || '/dashboard';
+    const redirectPath = searchParams.get("redirect") || "/dashboard";
 
     // We need the full URL for OAuth redirect
     const redirectTo = `${window.location.origin}/callback?next=${encodeURIComponent(redirectPath)}`;
@@ -79,7 +78,7 @@ export default function Login() {
 
     if (error) {
       setError(error.message);
-      if (provider === 'google') setLoadingGoogle(false);
+      if (provider === "google") setLoadingGoogle(false);
     }
   };
 
@@ -91,7 +90,10 @@ export default function Login() {
       </div>
 
       {/* ── Left visual panel (desktop only) ── */}
-      <section className="hidden lg:flex w-7/12 relative overflow-hidden bg-primary" aria-hidden="true">
+      <section
+        className="hidden lg:flex w-7/12 relative overflow-hidden bg-primary"
+        aria-hidden="true"
+      >
         {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
 
@@ -99,16 +101,16 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-end p-20 w-full h-full">
           <div className="mb-8">
             <span className="font-label text-secondary-fixed tracking-[0.2em] uppercase text-xs mb-4 block">
-              {t('login.subtitle')}
+              {t("login.subtitle")}
             </span>
             <h1 className="font-display text-7xl font-extrabold text-surface-bright tracking-tighter leading-tight max-w-2xl">
-              {t('login.hero_title')}
+              {t("login.hero_title")}
             </h1>
           </div>
           <div className="flex items-center gap-6">
             <div className="w-12 h-[1px] bg-secondary-fixed/50" />
             <p className="font-body text-surface-container-low/80 text-lg max-w-md italic">
-              &ldquo;{t('login.hero_quote')}&rdquo;
+              &ldquo;{t("login.hero_quote")}&rdquo;
             </p>
           </div>
         </div>
@@ -117,7 +119,11 @@ export default function Login() {
         <div className="absolute top-20 right-20 w-32 h-32 opacity-20 select-none">
           <span
             className="text-secondary-fixed"
-            style={{ fontSize: 120, fontFamily: 'Material Symbols Outlined', fontVariationSettings: "'FILL' 1" }}
+            style={{
+              fontSize: 120,
+              fontFamily: "Material Symbols Outlined",
+              fontVariationSettings: "'FILL' 1",
+            }}
           >
             hotel_class
           </span>
@@ -129,24 +135,27 @@ export default function Login() {
         {/* Logo */}
         <div className="absolute top-10 left-8 md:left-12">
           <span className="font-display text-2xl font-black text-primary tracking-tighter">
-            {t('login.title')}
+            {t("login.title")}
           </span>
         </div>
 
         <div className="w-full max-w-md py-24 lg:py-0">
           <header className="mb-10 text-center">
             <h2 className="font-display text-4xl font-bold text-on-surface tracking-tight mb-3">
-              {t('login.welcome')}
+              {t("login.welcome")}
             </h2>
             <p className="text-on-surface-variant font-medium">
-              {t('login.login_prompt')}
+              {t("login.login_prompt")}
             </p>
           </header>
 
           <div className="space-y-4">
             {/* Error */}
             {error && (
-              <div className="p-3 text-sm text-on-error bg-error rounded-lg text-center" role="alert">
+              <div
+                className="p-3 text-sm text-on-error bg-error rounded-lg text-center"
+                role="alert"
+              >
                 {error}
               </div>
             )}
@@ -154,15 +163,19 @@ export default function Login() {
             {/* Google Login Button */}
             <button
               id="google-login-button"
-              onClick={() => handleSocialLogin('google')}
+              onClick={() => handleSocialLogin("google")}
               disabled={loadingGoogle || loadingEmail}
               className="flex items-center justify-center gap-3 w-full py-4 bg-white text-gray-800 rounded-full border border-gray-300 font-bold tracking-tight hover:bg-gray-50 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {loadingGoogle ? (
-                t('common.connecting')
+                t("common.connecting")
               ) : (
                 <>
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                       fill="#4285F4"
@@ -180,14 +193,16 @@ export default function Login() {
                       fill="#EA4335"
                     />
                   </svg>
-                  {t('login.continue_google')}
+                  {t("login.continue_google")}
                 </>
               )}
             </button>
 
-
             {successMsg && (
-              <div className="p-3 text-sm text-on-primary-container bg-primary-container rounded-lg text-center" role="status">
+              <div
+                className="p-3 text-sm text-on-primary-container bg-primary-container rounded-lg text-center"
+                role="status"
+              >
                 {successMsg}
               </div>
             )}
@@ -195,8 +210,11 @@ export default function Login() {
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {isRegister && (
                 <div>
-                  <label htmlFor="name-input" className="block text-sm font-medium text-on-surface-variant mb-1">
-                    {t('login.name_label')}
+                  <label
+                    htmlFor="name-input"
+                    className="block text-sm font-medium text-on-surface-variant mb-1"
+                  >
+                    {t("login.name_label")}
                   </label>
                   <input
                     id="name-input"
@@ -212,8 +230,11 @@ export default function Login() {
               )}
 
               <div>
-                <label htmlFor="email-input" className="block text-sm font-medium text-on-surface-variant mb-1">
-                  {t('login.email_label')}
+                <label
+                  htmlFor="email-input"
+                  className="block text-sm font-medium text-on-surface-variant mb-1"
+                >
+                  {t("login.email_label")}
                 </label>
                 <input
                   id="email-input"
@@ -228,13 +249,18 @@ export default function Login() {
               </div>
 
               <div>
-                <label htmlFor="password-input" className="block text-sm font-medium text-on-surface-variant mb-1">
-                  {t('login.password_label')}
+                <label
+                  htmlFor="password-input"
+                  className="block text-sm font-medium text-on-surface-variant mb-1"
+                >
+                  {t("login.password_label")}
                 </label>
                 <input
                   id="password-input"
                   type="password"
-                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  autoComplete={
+                    isRegister ? "new-password" : "current-password"
+                  }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -249,13 +275,19 @@ export default function Login() {
                 disabled={loadingEmail || loadingGoogle}
                 className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                {loadingEmail ? t('common.connecting') : (isRegister ? t('login.sign_up') : t('login.sign_in'))}
+                {loadingEmail
+                  ? t("common.connecting")
+                  : isRegister
+                    ? t("login.sign_up")
+                    : t("login.sign_in")}
               </button>
             </form>
 
             <div className="flex items-center justify-between mt-6">
               <div className="w-full h-[1px] bg-outline-variant" />
-              <span className="px-4 text-sm text-on-surface-variant">{t('login.or')}</span>
+              <span className="px-4 text-sm text-on-surface-variant">
+                {t("login.or")}
+              </span>
               <div className="w-full h-[1px] bg-outline-variant" />
             </div>
 
@@ -265,20 +297,22 @@ export default function Login() {
                 onClick={() => setIsRegister(!isRegister)}
                 className="text-primary font-bold hover:underline"
               >
-                {isRegister ? t('login.have_account') : t('login.no_account')}
+                {isRegister ? t("login.have_account") : t("login.no_account")}
               </button>
             </div>
-
           </div>
         </div>
 
         <div className="absolute bottom-8 text-[10px] uppercase tracking-widest text-on-surface-variant/50 font-label">
-          {t('login.footer')}
+          {t("login.footer")}
         </div>
       </section>
 
       {/* Background decoration */}
-      <div className="fixed top-0 right-0 -z-10 pointer-events-none overflow-hidden h-full w-full opacity-30" aria-hidden="true">
+      <div
+        className="fixed top-0 right-0 -z-10 pointer-events-none overflow-hidden h-full w-full opacity-30"
+        aria-hidden="true"
+      >
         <div className="absolute -top-[10%] -right-[5%] w-[40vw] h-[40vw] rounded-full blur-[120px] bg-secondary-container/10" />
         <div className="absolute top-[40%] right-[10%] w-[20vw] h-[20vw] rounded-full blur-[100px] bg-primary-container/5" />
       </div>

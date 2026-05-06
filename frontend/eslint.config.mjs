@@ -17,15 +17,15 @@ const eslintConfig = [
       ".next/**",
       "dist/**",
       "node_modules/**",
-      "vitest.config.ts"
+      "vitest.config.ts",
     ],
   },
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off"
+      "@typescript-eslint/no-unused-vars": "off",
     },
-  }
+  },
 ];
 
 export default eslintConfig;

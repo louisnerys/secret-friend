@@ -1,4 +1,4 @@
-import { IEventRepository } from '@/core/domain/repositories/IEventRepository';
+import { IEventRepository } from "@/core/domain/repositories/IEventRepository";
 
 export class EventDetailsUseCase {
   constructor(private eventRepository: IEventRepository) {}

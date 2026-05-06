@@ -1,11 +1,11 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import AdminDashboard from './page';
-import { supabase } from '@/lib/supabase';
-import { mockGetUser, mockRpc } from '../../../vitest.setup';
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import AdminDashboard from "./page";
+import { supabase } from "@/lib/supabase";
+import { mockGetUser, mockRpc } from "../../../vitest.setup";
 
 const mockPush = vi.fn();
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: mockPush,
     replace: vi.fn(),
@@ -14,14 +14,14 @@ vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
 }));
 
-describe('AdminDashboard', () => {
+describe("AdminDashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders metrics correctly', async () => {
+  it("renders metrics correctly", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1', email: 'test@example.com' } },
+      data: { user: { id: "user-1", email: "test@example.com" } },
       error: null,
     });
 
@@ -32,13 +32,13 @@ describe('AdminDashboard', () => {
         engagement: {
           rate_percentage: 30,
           with_wishlist: 10,
-          total_participants: 100
+          total_participants: 100,
         },
         events: {
-           open: 1,
-           drawn: 2,
-           finished: 3
-        }
+          open: 1,
+          drawn: 2,
+          finished: 3,
+        },
       },
       error: null,
     });
@@ -50,9 +50,9 @@ describe('AdminDashboard', () => {
     });
   });
 
-  it('handles error state', async () => {
+  it("handles error state", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1', email: 'test@example.com' } },
+      data: { user: { id: "user-1", email: "test@example.com" } },
       error: null,
     });
 
@@ -68,9 +68,9 @@ describe('AdminDashboard', () => {
     });
   });
 
-  it('handles error state without message', async () => {
+  it("handles error state without message", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1', email: 'test@example.com' } },
+      data: { user: { id: "user-1", email: "test@example.com" } },
       error: null,
     });
 
@@ -84,7 +84,7 @@ describe('AdminDashboard', () => {
     });
   });
 
-  it('handles missing user', async () => {
+  it("handles missing user", async () => {
     mockGetUser.mockResolvedValue({
       data: { user: null },
       error: null,
@@ -94,28 +94,28 @@ describe('AdminDashboard', () => {
     // Should stay in loading or redirect (which is mocked)
   });
 
-  it('calls alert when make-me-admin is clicked', async () => {
+  it("calls alert when make-me-admin is clicked", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'u1' } },
+      data: { user: { id: "u1" } },
       error: null,
     });
     // Trigger error state to show the "how_to_admin" button
-    mockRpc.mockResolvedValue({ data: null, error: { message: 'Denied' } });
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    mockRpc.mockResolvedValue({ data: null, error: { message: "Denied" } });
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     render(<AdminDashboard />);
-    
+
     await waitFor(() => {
-      const btn = screen.getByText('admin.how_to_admin');
+      const btn = screen.getByText("admin.how_to_admin");
       fireEvent.click(btn);
       expect(alertSpy).toHaveBeenCalled();
     });
     alertSpy.mockRestore();
   });
 
-  it('renders nothing when metrics are null', async () => {
+  it("renders nothing when metrics are null", async () => {
     mockGetUser.mockResolvedValue({
-      data: { user: { id: 'u1' } },
+      data: { user: { id: "u1" } },
       error: null,
     });
     mockRpc.mockResolvedValue({ data: null, error: null });
@@ -127,43 +127,52 @@ describe('AdminDashboard', () => {
     });
   });
 
-  it('navigates back to dashboard on back button click', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+  it("navigates back to dashboard on back button click", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "u1" } },
+      error: null,
+    });
     // Trigger error state to show the back_dashboard button
-    mockRpc.mockResolvedValue({ data: null, error: { message: 'Denied' } });
+    mockRpc.mockResolvedValue({ data: null, error: { message: "Denied" } });
 
     const { getByText } = render(<AdminDashboard />);
-    
+
     await waitFor(() => {
-      const btn = getByText('admin.back_dashboard');
+      const btn = getByText("admin.back_dashboard");
       fireEvent.click(btn);
-      expect(mockPush).toHaveBeenCalledWith('/dashboard');
+      expect(mockPush).toHaveBeenCalledWith("/dashboard");
     });
   });
 
-  it('navigates back to dashboard from main header', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
-    mockRpc.mockResolvedValue({ data: {
-      mau: 100,
-      messages_24h: 50,
-      engagement: {
-        rate_percentage: 30,
-        with_wishlist: 10,
-        total_participants: 100
+  it("navigates back to dashboard from main header", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "u1" } },
+      error: null,
+    });
+    mockRpc.mockResolvedValue({
+      data: {
+        mau: 100,
+        messages_24h: 50,
+        engagement: {
+          rate_percentage: 30,
+          with_wishlist: 10,
+          total_participants: 100,
+        },
+        events: {
+          open: 1,
+          drawn: 2,
+          finished: 3,
+        },
       },
-      events: {
-         open: 1,
-         drawn: 2,
-         finished: 3
-      }
-    }, error: null });
+      error: null,
+    });
 
     const { getByText, getByRole } = render(<AdminDashboard />);
-    
+
     await waitFor(() => {
-      const btn = getByText('admin.back');
+      const btn = getByText("admin.back");
       fireEvent.click(btn);
-      expect(mockPush).toHaveBeenCalledWith('/dashboard');
+      expect(mockPush).toHaveBeenCalledWith("/dashboard");
     });
   });
 });

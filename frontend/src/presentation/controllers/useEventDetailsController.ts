@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
-import { User, Event, Participant, Message, ExclusionGroup } from '@/lib/types';
-import { eventRepository } from '@/infrastructure/repositories/SupabaseEventRepository';
-import { EventDetailsUseCase } from '@/core/application/usecases/EventDetailsUseCase';
+import { useEffect, useState, useCallback, use } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
+import { User, Event, Participant, Message, ExclusionGroup } from "@/lib/types";
+import { eventRepository } from "@/infrastructure/repositories/SupabaseEventRepository";
+import { EventDetailsUseCase } from "@/core/application/usecases/EventDetailsUseCase";
 
 const eventDetailsUseCase = new EventDetailsUseCase(eventRepository);
 
@@ -14,29 +14,32 @@ export function useEventDetailsController(eventId: string) {
   const [participants, setParticipantes] = useState<Participant[]>([]);
   const [isParticipant, setIsParticipant] = useState(false);
   const [muralMsgs, setMuralMsgs] = useState<Partial<Message>[]>([]);
-  const [newMuralMsg, setNewMuralMsg] = useState('');
+  const [newMuralMsg, setNewMuralMsg] = useState("");
 
   const [exclusionGroups, setExclusionGroups] = useState<ExclusionGroup[]>([]);
   const [isManagingExclusions, setIsManagingExclusions] = useState(false);
-  const [newExclusionGroupName, setNewExclusionGroupName] = useState('');
+  const [newExclusionGroupName, setNewExclusionGroupName] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [myWishlist, setMyWishlist] = useState('');
+  const [myWishlist, setMyWishlist] = useState("");
   const [isEditingWishlist, setIsEditingWishlist] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const router = useRouter();
 
   const fetchData = useCallback(async () => {
     const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { router.push('/login?redirect=/evento/' + eventId); return; }
+    if (!authData.user) {
+      router.push("/login?redirect=/evento/" + eventId);
+      return;
+    }
     setUser(authData.user as unknown as User);
 
     const { data, error } = await eventDetailsUseCase.getEventDetails(eventId);
 
     if (error || !data.eventData) {
-      alert(t('event.not_found'));
-      router.push('/dashboard');
+      alert(t("event.not_found"));
+      router.push("/dashboard");
       return;
     }
 
@@ -44,7 +47,9 @@ export function useEventDetailsController(eventId: string) {
 
     if (data.parts) {
       setParticipantes(data.parts as unknown as Participant[]);
-      const me = data.parts.find((p: Participant) => p.user_id === authData.user!.id);
+      const me = data.parts.find(
+        (p: Participant) => p.user_id === authData.user!.id,
+      );
       setIsParticipant(!!me);
       if (me?.wishlist) setMyWishlist(me.wishlist);
     }
@@ -62,30 +67,40 @@ export function useEventDetailsController(eventId: string) {
   const handleJoin = async () => {
     if (!user) return;
     const { error } = await eventDetailsUseCase.joinEvent(eventId, user.id);
-    if (!error) { setTimeout(() => fetchData(), 0); setIsEditingWishlist(true); }
-    else alert(t('event.join_error') + ': ' + error.message);
+    if (!error) {
+      setTimeout(() => fetchData(), 0);
+      setIsEditingWishlist(true);
+    } else alert(t("event.join_error") + ": " + error.message);
   };
 
   const handleSaveWishlist = async () => {
     if (!user) return;
     setLoading(true);
-    const { error } = await eventDetailsUseCase.updateWishlist(eventId, user.id, myWishlist);
-    if (!error) { setIsEditingWishlist(false); setTimeout(() => fetchData(), 0); }
-    else alert(t('event.wishlist_save_error') + ': ' + error.message);
+    const { error } = await eventDetailsUseCase.updateWishlist(
+      eventId,
+      user.id,
+      myWishlist,
+    );
+    if (!error) {
+      setIsEditingWishlist(false);
+      setTimeout(() => fetchData(), 0);
+    } else alert(t("event.wishlist_save_error") + ": " + error.message);
     setLoading(false);
   };
 
   const handleDraw = async () => {
     setLoading(true);
     const { data: sessionData } = await supabase.auth.getSession();
-    const res = await eventDetailsUseCase.performDraw(eventId, sessionData.session?.access_token || '');
+    const res = await eventDetailsUseCase.performDraw(
+      eventId,
+      sessionData.session?.access_token || "",
+    );
 
     if (res.ok) {
-      alert(t('event.draw_success'));
+      alert(t("event.draw_success"));
       setTimeout(() => fetchData(), 0);
-    }
-    else {
-      alert(t('event.draw_error'));
+    } else {
+      alert(t("event.draw_error"));
       setLoading(false);
     }
   };
@@ -93,8 +108,15 @@ export function useEventDetailsController(eventId: string) {
   const handleSendMuralMsg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMuralMsg.trim() || !user) return;
-    const { error } = await eventDetailsUseCase.addMessage(eventId, user.id, newMuralMsg.trim());
-    if (!error) { setNewMuralMsg(''); setTimeout(() => fetchData(), 0); }
+    const { error } = await eventDetailsUseCase.addMessage(
+      eventId,
+      user.id,
+      newMuralMsg.trim(),
+    );
+    if (!error) {
+      setNewMuralMsg("");
+      setTimeout(() => fetchData(), 0);
+    }
   };
 
   const handleToggleLike = async (msgId: string) => {
@@ -105,8 +127,14 @@ export function useEventDetailsController(eventId: string) {
 
   const handleCreateExclusionGroup = async () => {
     if (!newExclusionGroupName.trim()) return;
-    const { error } = await eventDetailsUseCase.createExclusionGroup(eventId, newExclusionGroupName.trim());
-    if (!error) { setNewExclusionGroupName(''); setTimeout(() => fetchData(), 0); }
+    const { error } = await eventDetailsUseCase.createExclusionGroup(
+      eventId,
+      newExclusionGroupName.trim(),
+    );
+    if (!error) {
+      setNewExclusionGroupName("");
+      setTimeout(() => fetchData(), 0);
+    }
   };
 
   const handleDeleteExclusionGroup = async (groupId: string) => {
@@ -157,6 +185,6 @@ export function useEventDetailsController(eventId: string) {
     handleCreateExclusionGroup,
     handleDeleteExclusionGroup,
     handleToggleMember,
-    handleCopyLink
+    handleCopyLink,
   };
 }
