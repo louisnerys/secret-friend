@@ -249,7 +249,14 @@ export default function Login() {
                 disabled={loadingEmail || loadingGoogle}
                 className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                {loadingEmail ? t('common.connecting') : (isRegister ? t('login.sign_up') : t('login.sign_in'))}
+                {loadingEmail ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
+                    <span>{t('common.connecting')}</span>
+                  </div>
+                ) : (
+                  isRegister ? t('login.sign_up') : t('login.sign_in')
+                )}
               </button>
             </form>
 

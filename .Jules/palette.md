@@ -8,3 +8,7 @@
 ## 2024-05-05 - Missing Aria Label on Icon-only button
 **Learning:** The "Like" button (👍) on mural messages was implemented as an icon-only button without an `aria-label`, making its purpose unclear to screen reader users. Also, since it acts as a toggle, the label should reflect the current state (e.g., "Like message" vs. "Unlike message").
 **Action:** When adding icon-only buttons, especially those that toggle state, ensure an `aria-label` is provided and dynamically updated to reflect the action the button will perform in its current state. Add appropriate translation strings to the `.json` files.
+
+## 2024-05-06 - Loading States for Primary Actions
+**Learning:** Found that primary async submit buttons (like "Create Event" and "Sign In/Up") provided only a static text change (e.g., to "Loading...") during submission. This lacked sufficient visual feedback, potentially leaving users unsure if the system was actively processing their request.
+**Action:** When an action requires waiting (e.g., form submissions, authentication), replace the static text-only loading state with a combination of an animated spinner and text. This visible animated feedback improves user confidence that their action is being processed.

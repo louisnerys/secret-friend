@@ -172,7 +172,14 @@ export default function NewEvent() {
               disabled={loading}
               className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] active:scale-95 transition-transform disabled:opacity-70"
             >
-              {loading ? t('common.loading') : t('newEvent.create_button')}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
+                  <span>{t('common.loading')}</span>
+                </div>
+              ) : (
+                t('newEvent.create_button')
+              )}
             </button>
             <button
               type="button"
