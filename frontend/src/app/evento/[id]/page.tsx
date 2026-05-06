@@ -1,17 +1,25 @@
-'use client';
+"use client";
 
-import { use } from 'react';
-import { useEventDetailsController } from '@/presentation/controllers/useEventDetailsController';
+import { use } from "react";
+import { useEventDetailsController } from "@/presentation/controllers/useEventDetailsController";
 
-
-
-import { User, Event, Participant, Message, ExclusionGroup } from '@/lib/types';
+import { User, Event, Participant, Message, ExclusionGroup } from "@/lib/types";
 
 interface EventPageProps {
   params: Promise<{ id: string }>;
 }
 
-const MSO = ({ children, fill, size = 22, ariaHidden = true }: { children: string; fill?: boolean; size?: number; ariaHidden?: boolean }) => (
+const MSO = ({
+  children,
+  fill,
+  size = 22,
+  ariaHidden = true,
+}: {
+  children: string;
+  fill?: boolean;
+  size?: number;
+  ariaHidden?: boolean;
+}) => (
   <span
     className="material-symbols-outlined"
     aria-hidden={ariaHidden}
@@ -56,15 +64,20 @@ export default function EventDetalhes(props: EventPageProps) {
     handleCreateExclusionGroup,
     handleDeleteExclusionGroup,
     handleToggleMember,
-    handleCopyLink
+    handleCopyLink,
   } = useEventDetailsController(id);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center" aria-live="polite">
+      <div
+        className="min-h-screen bg-surface flex items-center justify-center"
+        aria-live="polite"
+      >
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs">{t('common.loading')}</p>
+          <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs">
+            {t("common.loading")}
+          </p>
         </div>
       </div>
     );
@@ -74,13 +87,17 @@ export default function EventDetalhes(props: EventPageProps) {
 
   const isCreator = event.creator_id === user?.id;
   const dateLabel = event.reveal_date
-    ? new Date(event.reveal_date).toLocaleDateString(i18n.language, { day: '2-digit', month: 'long', year: 'numeric' })
+    ? new Date(event.reveal_date).toLocaleDateString(i18n.language, {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
     : null;
 
   const statusBg: Record<string, string> = {
-    open: 'bg-secondary-container/20 text-secondary',
-    drawn: 'bg-primary-container/20 text-primary',
-    closed: 'bg-surface-container-highest text-on-surface-variant',
+    open: "bg-secondary-container/20 text-secondary",
+    drawn: "bg-primary-container/20 text-primary",
+    closed: "bg-surface-container-highest text-on-surface-variant",
   };
 
   return (
@@ -89,9 +106,9 @@ export default function EventDetalhes(props: EventPageProps) {
       <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_8px_24px_rgba(26,28,26,0.06)] flex items-center justify-between px-6 py-4 transition-colors">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push("/dashboard")}
             className="text-primary active:scale-90 transition-transform"
-            aria-label={t('common.back')}
+            aria-label={t("common.back")}
           >
             <MSO>arrow_back</MSO>
           </button>
@@ -107,17 +124,19 @@ export default function EventDetalhes(props: EventPageProps) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${statusBg[event.status] || statusBg.open}`}>
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${statusBg[event.status] || statusBg.open}`}
+          >
             {t(`dashboard.status.${event.status}`)}
           </span>
           <button
             onClick={handleCopyLink}
             className="text-on-surface-variant hover:text-primary transition-colors flex items-center"
-            aria-label={copySuccess ? t('common.copied') : t('common.copy')}
-            title={copySuccess ? t('common.copied') : t('common.copy')}
+            aria-label={copySuccess ? t("common.copied") : t("common.copy")}
+            title={copySuccess ? t("common.copied") : t("common.copy")}
             aria-live="polite"
           >
-            <MSO>{copySuccess ? 'check_circle' : 'link'}</MSO>
+            <MSO>{copySuccess ? "check_circle" : "link"}</MSO>
           </button>
         </div>
       </header>
@@ -125,43 +144,59 @@ export default function EventDetalhes(props: EventPageProps) {
       <main className="mt-24 px-6 max-w-2xl mx-auto space-y-8">
         {/* Event Info */}
         <section className="relative bg-surface-container-low rounded-xl p-8 overflow-hidden border-t-2 border-secondary/20">
-          <div className="absolute top-4 right-4 text-secondary-container/30" aria-hidden="true">
-            <MSO fill size={36}>auto_awesome</MSO>
+          <div
+            className="absolute top-4 right-4 text-secondary-container/30"
+            aria-hidden="true"
+          >
+            <MSO fill size={36}>
+              auto_awesome
+            </MSO>
           </div>
-          <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">{event.description}</p>
+          <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+            {event.description}
+          </p>
         </section>
 
         {/* Reveal / Draw section */}
-        {isParticipant && event.status === 'drawn' && (
+        {isParticipant && event.status === "drawn" && (
           <section className="bg-surface-container-low rounded-xl p-8 relative overflow-hidden border-t-2 border-secondary/20">
-            <div className="absolute top-4 right-4 text-secondary-container/30" aria-hidden="true">
-              <MSO fill size={36}>auto_awesome</MSO>
+            <div
+              className="absolute top-4 right-4 text-secondary-container/30"
+              aria-hidden="true"
+            >
+              <MSO fill size={36}>
+                auto_awesome
+              </MSO>
             </div>
             <div className="space-y-6 relative z-10">
-              <h2 className="font-headline text-2xl tracking-tight text-primary">{t('event.your_friend_is')}</h2>
+              <h2 className="font-headline text-2xl tracking-tight text-primary">
+                {t("event.your_friend_is")}
+              </h2>
               <button
                 onClick={() => router.push(`/evento/${id}/draw`)}
                 className="bg-primary text-on-primary px-8 py-4 rounded-full font-bold shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:opacity-90 transition-opacity flex items-center gap-3"
               >
                 <MSO>visibility</MSO>
-                {t('event.reveal_name')}
+                {t("event.reveal_name")}
               </button>
             </div>
           </section>
         )}
 
         {/* Wishlist */}
-        {isParticipant && event.status === 'open' && (
+        {isParticipant && event.status === "open" && (
           <section className="space-y-4">
             <div className="flex justify-between items-end">
-              <h2 className="font-headline text-xl text-primary">{t('event.my_wishlist')}</h2>
+              <h2 className="font-headline text-xl text-primary">
+                {t("event.my_wishlist")}
+              </h2>
               {!isEditingWishlist && (
                 <button
                   onClick={() => setIsEditingWishlist(true)}
                   className="text-primary font-bold text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
                 >
-                  <MSO size={18}>{myWishlist ? 'edit' : 'add_circle'}</MSO>
-                  {myWishlist ? t('event.edit') : t('event.add_item')}
+                  <MSO size={18}>{myWishlist ? "edit" : "add_circle"}</MSO>
+                  {myWishlist ? t("event.edit") : t("event.add_item")}
                 </button>
               )}
             </div>
@@ -171,38 +206,53 @@ export default function EventDetalhes(props: EventPageProps) {
                   <textarea
                     value={myWishlist}
                     onChange={(e) => setMyWishlist(e.target.value)}
-                    placeholder={t('event.wishlist_placeholder')}
+                    placeholder={t("event.wishlist_placeholder")}
                     rows={3}
                     className="w-full bg-surface-container-highest border-none rounded-lg px-4 py-4 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 resize-none text-on-surface"
                   />
                   <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary transition-all duration-500 group-focus-within:w-full" />
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={handleSaveWishlist} className="bg-primary text-on-primary font-bold py-2.5 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)]">
-                    {t('common.save')}
+                  <button
+                    onClick={handleSaveWishlist}
+                    className="bg-primary text-on-primary font-bold py-2.5 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)]"
+                  >
+                    {t("common.save")}
                   </button>
-                  <button onClick={() => setIsEditingWishlist(false)} className="text-on-surface-variant font-medium py-2.5 px-6 rounded-full border border-outline-variant hover:bg-surface-container">
-                    {t('common.cancel')}
+                  <button
+                    onClick={() => setIsEditingWishlist(false)}
+                    className="text-on-surface-variant font-medium py-2.5 px-6 rounded-full border border-outline-variant hover:bg-surface-container"
+                  >
+                    {t("common.cancel")}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {myWishlist ? (
-                  myWishlist.split('\n').filter(Boolean).map((item: string, i: number) => (
-                    <div key={i} className="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between shadow-sm border-l-4 border-secondary">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center" aria-hidden="true">
-                          <MSO size={18}>card_giftcard</MSO>
+                  myWishlist
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((item: string, i: number) => (
+                      <div
+                        key={i}
+                        className="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between shadow-sm border-l-4 border-secondary"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center"
+                            aria-hidden="true"
+                          >
+                            <MSO size={18}>card_giftcard</MSO>
+                          </div>
+                          <p className="font-bold text-on-surface">{item}</p>
                         </div>
-                        <p className="font-bold text-on-surface">{item}</p>
+                        <MSO size={20}>more_vert</MSO>
                       </div>
-                      <MSO size={20}>more_vert</MSO>
-                    </div>
-                  ))
+                    ))
                 ) : (
                   <p className="italic text-on-surface-variant text-sm p-4 bg-surface-container-low rounded-xl">
-                    {t('event.wishlist_empty')}
+                    {t("event.wishlist_empty")}
                   </p>
                 )}
               </div>
@@ -212,63 +262,78 @@ export default function EventDetalhes(props: EventPageProps) {
 
         {/* Actions bar */}
         <div className="flex flex-wrap gap-3 items-center">
-          {!isParticipant && event.status === 'open' && (
+          {!isParticipant && event.status === "open" && (
             <button
               onClick={handleJoin}
               className="bg-primary text-on-primary font-bold py-4 px-8 rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:shadow-[0_12px_32px_rgba(122,0,26,0.3)] transition-all flex items-center gap-2"
             >
               <MSO>person_add</MSO>
-              {t('event.join_event')}
+              {t("event.join_event")}
             </button>
           )}
 
-          {isCreator && event.status === 'open' && (
+          {isCreator && event.status === "open" && (
             <button
               onClick={handleDraw}
               disabled={participants.length < 3}
-              title={participants.length < 3 ? t('event.draw_requirement') : t('event.draw_now')}
-              className={`w-full bg-surface-container-highest border-2 border-secondary/30 text-primary p-6 rounded-2xl flex items-center justify-between group transition-all ${participants.length < 3 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-secondary-fixed'}`}
+              title={
+                participants.length < 3
+                  ? t("event.draw_requirement")
+                  : t("event.draw_now")
+              }
+              className={`w-full bg-surface-container-highest border-2 border-secondary/30 text-primary p-6 rounded-2xl flex items-center justify-between group transition-all ${participants.length < 3 ? "opacity-50 cursor-not-allowed" : "hover:bg-secondary-fixed"}`}
             >
               <div className="text-left">
-                <p className="font-headline text-xl">{t('event.draw_now')}</p>
+                <p className="font-headline text-xl">{t("event.draw_now")}</p>
                 <p className="text-sm font-body text-on-surface-variant">
                   {participants.length < 3
-                    ? t('event.participants_count', { count: participants.length })
-                    : t('event.draw_warning')}
+                    ? t("event.participants_count", {
+                        count: participants.length,
+                      })
+                    : t("event.draw_warning")}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div
+                className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
+                aria-hidden="true"
+              >
                 <MSO>casino</MSO>
               </div>
             </button>
           )}
         </div>
 
-
         {/* Exclusions Management */}
-        {isCreator && event.status === 'open' && (
+        {isCreator && event.status === "open" && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-headline text-2xl text-primary">{t('event.exclusions')}</h2>
+              <h2 className="font-headline text-2xl text-primary">
+                {t("event.exclusions")}
+              </h2>
               <button
                 onClick={() => setIsManagingExclusions(!isManagingExclusions)}
                 className="text-primary hover:bg-surface-container p-2 rounded-full transition-colors flex items-center justify-center"
-                aria-label={t('event.toggle_exclusions')}
+                aria-label={t("event.toggle_exclusions")}
                 aria-expanded={isManagingExclusions}
                 aria-controls="exclusions-panel"
               >
-                <MSO>{isManagingExclusions ? 'expand_less' : 'expand_more'}</MSO>
+                <MSO>
+                  {isManagingExclusions ? "expand_less" : "expand_more"}
+                </MSO>
               </button>
             </div>
 
             {isManagingExclusions && (
-              <div id="exclusions-panel" className="bg-surface-container rounded-2xl p-4 space-y-4">
+              <div
+                id="exclusions-panel"
+                className="bg-surface-container rounded-2xl p-4 space-y-4"
+              >
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newExclusionGroupName}
                     onChange={(e) => setNewExclusionGroupName(e.target.value)}
-                    placeholder={t('event.exclusion_group_placeholder')}
+                    placeholder={t("event.exclusion_group_placeholder")}
                     className="flex-1 bg-surface border border-outline-variant rounded-xl px-4 py-2 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                     maxLength={50}
                   />
@@ -277,36 +342,48 @@ export default function EventDetalhes(props: EventPageProps) {
                     disabled={!newExclusionGroupName.trim()}
                     className="bg-primary text-on-primary px-4 py-2 rounded-xl disabled:opacity-50 flex items-center gap-2"
                   >
-                    <MSO>add</MSO> {t('event.add_group')}
+                    <MSO>add</MSO> {t("event.add_group")}
                   </button>
                 </div>
 
                 {exclusionGroups.length > 0 ? (
                   <div className="space-y-4">
-                    {exclusionGroups.map(group => (
-                      <div key={group.id} className="bg-surface rounded-xl p-4 border border-outline-variant">
+                    {exclusionGroups.map((group) => (
+                      <div
+                        key={group.id}
+                        className="bg-surface rounded-xl p-4 border border-outline-variant"
+                      >
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-headline text-lg text-primary">{group.name}</h3>
+                          <h3 className="font-headline text-lg text-primary">
+                            {group.name}
+                          </h3>
                           <button
                             onClick={() => handleDeleteExclusionGroup(group.id)}
                             className="text-error hover:bg-error-container p-1 rounded-full transition-colors"
-                            aria-label={t('common.delete')}
+                            aria-label={t("common.delete")}
                           >
                             <MSO>delete</MSO>
                           </button>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {participants.map(p => {
-                            const isSelected = group.exclusion_group_members?.some(m => m.user_id === p.user_id);
-                            const pName = Array.isArray(p.users) ? p.users[0]?.name : p.users?.name;
+                          {participants.map((p) => {
+                            const isSelected =
+                              group.exclusion_group_members?.some(
+                                (m) => m.user_id === p.user_id,
+                              );
+                            const pName = Array.isArray(p.users)
+                              ? p.users[0]?.name
+                              : p.users?.name;
                             return (
                               <button
                                 key={p.user_id}
-                                onClick={() => handleToggleMember(group.id, p.user_id)}
+                                onClick={() =>
+                                  handleToggleMember(group.id, p.user_id)
+                                }
                                 className={`px-3 py-1.5 rounded-full text-sm font-body border transition-colors flex items-center gap-2 ${
                                   isSelected
-                                    ? 'bg-primary text-on-primary border-primary'
-                                    : 'bg-surface text-on-surface-variant border-outline-variant hover:border-primary'
+                                    ? "bg-primary text-on-primary border-primary"
+                                    : "bg-surface text-on-surface-variant border-outline-variant hover:border-primary"
                                 }`}
                               >
                                 {isSelected && <MSO size={16}>check</MSO>}
@@ -319,7 +396,9 @@ export default function EventDetalhes(props: EventPageProps) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-on-surface-variant text-sm text-center py-4">{t('event.no_exclusion_groups')}</p>
+                  <p className="text-on-surface-variant text-sm text-center py-4">
+                    {t("event.no_exclusion_groups")}
+                  </p>
                 )}
               </div>
             )}
@@ -328,22 +407,40 @@ export default function EventDetalhes(props: EventPageProps) {
 
         {/* Participants */}
         <section className="space-y-4">
-          <h2 className="font-headline text-2xl text-primary">{t('event.participants')}</h2>
-          <div className="flex overflow-x-auto pb-4 gap-4" style={{ scrollbarWidth: 'none' }}>
+          <h2 className="font-headline text-2xl text-primary">
+            {t("event.participants")}
+          </h2>
+          <div
+            className="flex overflow-x-auto pb-4 gap-4"
+            style={{ scrollbarWidth: "none" }}
+          >
             {participants.map((p) => {
               const p_users = p.users;
-              const name = Array.isArray(p_users) ? p_users[0]?.name : p_users?.name;
+              const name = Array.isArray(p_users)
+                ? p_users[0]?.name
+                : p_users?.name;
               return (
-                <div key={p.user_id} className="flex-shrink-0 flex flex-col items-center gap-2">
+                <div
+                  key={p.user_id}
+                  className="flex-shrink-0 flex flex-col items-center gap-2"
+                >
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-container to-secondary-container flex items-center justify-center font-display font-bold text-on-primary-container text-xl border-2 border-surface shadow-md" aria-hidden="true">
+                    <div
+                      className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-container to-secondary-container flex items-center justify-center font-display font-bold text-on-primary-container text-xl border-2 border-surface shadow-md"
+                      aria-hidden="true"
+                    >
                       {name?.charAt(0)?.toUpperCase()}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 bg-secondary w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface" aria-hidden="true">
+                    <div
+                      className="absolute -bottom-1 -right-1 bg-secondary w-5 h-5 rounded-full flex items-center justify-center border-2 border-surface"
+                      aria-hidden="true"
+                    >
                       <MSO size={10}>check</MSO>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-on-surface">{name?.split(' ')[0]}</span>
+                  <span className="text-xs font-bold text-on-surface">
+                    {name?.split(" ")[0]}
+                  </span>
                 </div>
               );
             })}
@@ -351,11 +448,13 @@ export default function EventDetalhes(props: EventPageProps) {
               <button
                 onClick={() => handleCopyLink()}
                 className="flex-shrink-0 w-16 h-16 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center hover:bg-surface-container transition-colors"
-                aria-label={copySuccess ? t("common.copied") : t("common.invite")}
+                aria-label={
+                  copySuccess ? t("common.copied") : t("common.invite")
+                }
                 title={copySuccess ? t("common.copied") : t("common.invite")}
                 aria-live="polite"
               >
-                <MSO>{copySuccess ? 'check_circle' : 'person_add'}</MSO>
+                <MSO>{copySuccess ? "check_circle" : "person_add"}</MSO>
               </button>
             )}
           </div>
@@ -364,32 +463,49 @@ export default function EventDetalhes(props: EventPageProps) {
         {/* Mural */}
         {isParticipant && (
           <section className="space-y-4 pb-8">
-            <h2 className="font-headline text-2xl text-primary">{t('event.event_mural')}</h2>
+            <h2 className="font-headline text-2xl text-primary">
+              {t("event.event_mural")}
+            </h2>
             <div className="space-y-3">
               {muralMsgs.map((msg: Partial<Message>) => {
                 const reacts = msg.reactions || {};
                 const isLiked = user ? !!reacts[user.id] : false;
                 const totalLikes = Object.keys(reacts).length;
                 const msg_users = msg.users;
-                const name = Array.isArray(msg_users) ? msg_users[0]?.name : msg_users?.name;
+                const name = Array.isArray(msg_users)
+                  ? msg_users[0]?.name
+                  : msg_users?.name;
                 return (
-                  <div key={msg.id} className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border-l-4 border-secondary">
-                    <span className="font-bold text-sm text-primary block mb-1">{name}</span>
-                    <p className="text-on-surface mb-3 leading-relaxed">{msg.text}</p>
+                  <div
+                    key={msg.id}
+                    className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border-l-4 border-secondary"
+                  >
+                    <span className="font-bold text-sm text-primary block mb-1">
+                      {name}
+                    </span>
+                    <p className="text-on-surface mb-3 leading-relaxed">
+                      {msg.text}
+                    </p>
                     <button
                       onClick={() => handleToggleLike(msg.id!)}
-                      className={`text-sm py-1.5 px-3 rounded-full border transition-colors flex items-center gap-1.5 ${isLiked ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high'}`}
-                      aria-label={isLiked ? t('event.unlike_message') : t('event.like_message')}
+                      className={`text-sm py-1.5 px-3 rounded-full border transition-colors flex items-center gap-1.5 ${isLiked ? "bg-primary/10 border-primary/30 text-primary" : "bg-surface-container border-outline-variant text-on-surface-variant hover:bg-surface-container-high"}`}
+                      aria-label={
+                        isLiked
+                          ? t("event.unlike_message")
+                          : t("event.like_message")
+                      }
                     >
                       <span aria-hidden="true">👍</span>
-                      {totalLikes > 0 && <span className="font-medium">{totalLikes}</span>}
+                      {totalLikes > 0 && (
+                        <span className="font-medium">{totalLikes}</span>
+                      )}
                     </button>
                   </div>
                 );
               })}
               {muralMsgs.length === 0 && (
                 <p className="italic text-on-surface-variant text-sm text-center py-8">
-                  {t('event.mural_empty')}
+                  {t("event.mural_empty")}
                 </p>
               )}
             </div>
@@ -399,8 +515,8 @@ export default function EventDetalhes(props: EventPageProps) {
                 <input
                   type="text"
                   value={newMuralMsg}
-                  onChange={e => setNewMuralMsg(e.target.value)}
-                  placeholder={t('event.mural_placeholder')}
+                  onChange={(e) => setNewMuralMsg(e.target.value)}
+                  placeholder={t("event.mural_placeholder")}
                   className="w-full bg-surface-container-highest border-none rounded-full px-5 py-3 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 text-on-surface"
                 />
               </div>
@@ -408,7 +524,7 @@ export default function EventDetalhes(props: EventPageProps) {
                 type="submit"
                 disabled={!newMuralMsg.trim()}
                 className="bg-primary text-on-primary font-bold py-3 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                aria-label={t('common.send')}
+                aria-label={t("common.send")}
               >
                 <MSO>send</MSO>
               </button>
@@ -420,28 +536,36 @@ export default function EventDetalhes(props: EventPageProps) {
       {/* ── Bottom Nav ── */}
       <nav className="fixed bottom-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-lg flex justify-around items-center px-4 pb-6 pt-2 shadow-[0_-8px_24px_rgba(26,28,26,0.04)] rounded-t-3xl transition-colors">
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push("/dashboard")}
           className="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-full p-3 transition-all"
         >
           <MSO fill>event</MSO>
-          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">{t('event.nav_events')}</span>
+          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
+            {t("event.nav_events")}
+          </span>
         </button>
         <button className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors">
           <MSO>card_giftcard</MSO>
-          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">{t('event.nav_list')}</span>
+          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
+            {t("event.nav_list")}
+          </span>
         </button>
-        {isParticipant && event.status === 'drawn' && (
+        {isParticipant && event.status === "drawn" && (
           <button
             onClick={() => router.push(`/evento/${id}/draw`)}
             className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors"
           >
             <MSO>auto_awesome</MSO>
-            <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">{t('event.nav_draw')}</span>
+            <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
+              {t("event.nav_draw")}
+            </span>
           </button>
         )}
         <button className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors">
           <MSO>person</MSO>
-          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">{t('event.nav_profile')}</span>
+          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
+            {t("event.nav_profile")}
+          </span>
         </button>
       </nav>
     </div>

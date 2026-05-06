@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/lib/supabase";
 
 export default function NewEvent() {
   const { t } = useTranslation();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [revealDate, setRevealDate] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [revealDate, setRevealDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -22,27 +22,36 @@ export default function NewEvent() {
     setError(null);
 
     const { data: user } = await supabase.auth.getUser();
-    if (!user.user) { router.push('/login'); return; }
+    if (!user.user) {
+      router.push("/login");
+      return;
+    }
 
     const { data, error } = await supabase
-      .from('events')
+      .from("events")
       .insert({
         name: name.trim(),
-        description: description.trim() || t('newEvent.default_description'),
+        description: description.trim() || t("newEvent.default_description"),
         reveal_date: revealDate ? new Date(revealDate).toISOString() : null,
         creator_id: user.user.id,
-        status: 'open',
+        status: "open",
       })
       .select()
       .single();
 
     if (error || !data) {
-      setError(t('newEvent.create_error') + ': ' + (error?.message || t('common.error')));
+      setError(
+        t("newEvent.create_error") +
+          ": " +
+          (error?.message || t("common.error")),
+      );
       setLoading(false);
       return;
     }
 
-    await supabase.from('participants').insert({ event_id: data.id, user_id: user.user.id });
+    await supabase
+      .from("participants")
+      .insert({ event_id: data.id, user_id: user.user.id });
     router.push(`/evento/${data.id}`);
   };
 
@@ -53,14 +62,20 @@ export default function NewEvent() {
         <div className="flex items-center justify-between px-6 py-4 w-full">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push("/dashboard")}
               className="text-primary active:scale-95 transition-transform"
-              aria-label={t('common.back')}
+              aria-label={t("common.back")}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 24 }} aria-hidden="true">arrow_back</span>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 24 }}
+                aria-hidden="true"
+              >
+                arrow_back
+              </span>
             </button>
             <h1 className="text-xl font-bold tracking-tight text-primary font-display">
-              {t('newEvent.title')}
+              {t("newEvent.title")}
             </h1>
           </div>
           <div className="w-6" />
@@ -69,7 +84,10 @@ export default function NewEvent() {
 
       <main className="pt-24 pb-12 px-6 max-w-md mx-auto">
         {/* Hero Banner */}
-        <div className="relative mb-10 overflow-hidden rounded-xl h-48 bg-surface-container-low flex items-center justify-center" aria-hidden="true">
+        <div
+          className="relative mb-10 overflow-hidden rounded-xl h-48 bg-surface-container-low flex items-center justify-center"
+          aria-hidden="true"
+        >
           <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-primary to-secondary-container" />
           <div className="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent" />
           <div className="relative z-10 text-center">
@@ -77,7 +95,7 @@ export default function NewEvent() {
               New
             </span>
             <h2 className="text-3xl font-extrabold text-primary tracking-tighter font-display">
-              {t('newEvent.create_title')}
+              {t("newEvent.create_title")}
             </h2>
           </div>
           <span
@@ -96,13 +114,13 @@ export default function NewEvent() {
               className="block text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant px-1"
               htmlFor="event-name"
             >
-              {t('newEvent.fields.name')}
+              {t("newEvent.fields.name")}
             </label>
             <div className="relative group">
               <input
                 id="event-name"
                 type="text"
-                placeholder={t('newEvent.fields.name_placeholder')}
+                placeholder={t("newEvent.fields.name_placeholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -119,11 +137,17 @@ export default function NewEvent() {
               className="block text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant px-1"
               htmlFor="event-date"
             >
-              {t('newEvent.fields.reveal_date')}
+              {t("newEvent.fields.reveal_date")}
             </label>
             <div className="relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none">
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }} aria-hidden="true">calendar_today</span>
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 20 }}
+                  aria-hidden="true"
+                >
+                  calendar_today
+                </span>
               </div>
               <input
                 id="event-date"
@@ -142,12 +166,12 @@ export default function NewEvent() {
               className="block text-[11px] font-bold uppercase tracking-[0.05em] text-on-surface-variant px-1"
               htmlFor="event-rules"
             >
-              {t('newEvent.fields.description')}
+              {t("newEvent.fields.description")}
             </label>
             <div className="relative group">
               <textarea
                 id="event-rules"
-                placeholder={t('newEvent.fields.description_placeholder')}
+                placeholder={t("newEvent.fields.description_placeholder")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
@@ -155,14 +179,25 @@ export default function NewEvent() {
               />
               <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary transition-all duration-500 group-focus-within:w-full" />
               <div className="absolute top-4 right-4 text-secondary-container opacity-20 pointer-events-none">
-                <span className="material-symbols-outlined" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }} aria-hidden="true">star</span>
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}
+                  aria-hidden="true"
+                >
+                  star
+                </span>
               </div>
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="p-3 text-sm text-on-error bg-error rounded-lg" role="alert">{error}</div>
+            <div
+              className="p-3 text-sm text-on-error bg-error rounded-lg"
+              role="alert"
+            >
+              {error}
+            </div>
           )}
 
           {/* Actions */}
@@ -172,15 +207,15 @@ export default function NewEvent() {
               disabled={loading}
               className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] active:scale-95 transition-transform disabled:opacity-70"
             >
-              {loading ? t('common.loading') : t('newEvent.create_button')}
+              {loading ? t("common.loading") : t("newEvent.create_button")}
             </button>
             <button
               type="button"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push("/dashboard")}
               disabled={loading}
               className="w-full py-2 text-primary font-bold text-sm tracking-wide hover:opacity-70 transition-opacity"
             >
-              {t('common.cancel')}
+              {t("common.cancel")}
             </button>
           </div>
         </form>
@@ -195,7 +230,7 @@ export default function NewEvent() {
             auto_awesome
           </span>
           <p className="text-[12px] text-on-tertiary-container leading-relaxed">
-            {t('newEvent.info_text')}
+            {t("newEvent.info_text")}
           </p>
         </div>
       </main>
@@ -204,19 +239,43 @@ export default function NewEvent() {
       <nav className="fixed bottom-0 left-0 w-full z-50 px-8 pb-6 pt-2 bg-surface/90 backdrop-blur-2xl shadow-[0_-8px_24px_rgba(26,28,26,0.06)]">
         <div className="flex justify-around items-center w-full max-w-lg mx-auto">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push("/dashboard")}
             className="flex flex-col items-center justify-center text-primary bg-primary/5 rounded-full px-4 py-2"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }} aria-hidden="true">celebration</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">{t('dashboard.nav_events')}</span>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}
+              aria-hidden="true"
+            >
+              celebration
+            </span>
+            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">
+              {t("dashboard.nav_events")}
+            </span>
           </button>
           <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">group_add</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">{t('common.invite')}</span>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 22 }}
+              aria-hidden="true"
+            >
+              group_add
+            </span>
+            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">
+              {t("common.invite")}
+            </span>
           </button>
           <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }} aria-hidden="true">person</span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">{t('dashboard.nav_profile')}</span>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 22 }}
+              aria-hidden="true"
+            >
+              person
+            </span>
+            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">
+              {t("dashboard.nav_profile")}
+            </span>
           </button>
         </div>
       </nav>

@@ -1,9 +1,13 @@
-import { IEventRepository } from '@/core/domain/repositories/IEventRepository';
+import { IEventRepository } from "@/core/domain/repositories/IEventRepository";
 
 export class EventDrawUseCase {
   constructor(private eventRepository: IEventRepository) {}
 
-  async getPrivateMessages(eventId: string, userId: string, drawnId: string | null) {
+  async getPrivateMessages(
+    eventId: string,
+    userId: string,
+    drawnId: string | null,
+  ) {
     return this.eventRepository.getPrivateMessages(eventId, userId, drawnId);
   }
 
