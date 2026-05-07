@@ -53,12 +53,10 @@ describe("Dashboard", () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          single: vi
-            .fn()
-            .mockResolvedValue({
-              data: { name: "Alice", is_admin: false },
-              error: null,
-            }),
+          single: vi.fn().mockResolvedValue({
+            data: { name: "Alice", is_admin: false },
+            error: null,
+          }),
         };
       }
       if (table === "events") {
@@ -110,12 +108,10 @@ describe("Dashboard", () => {
         };
       if (table === "events")
         return {
-          select: vi
-            .fn()
-            .mockResolvedValue({
-              data: [{ id: "e1", name: "Party" }],
-              error: null,
-            }),
+          select: vi.fn().mockResolvedValue({
+            data: [{ id: "e1", name: "Party" }],
+            error: null,
+          }),
         };
       return {};
     });
@@ -172,12 +168,10 @@ describe("Dashboard", () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          single: vi
-            .fn()
-            .mockResolvedValue({
-              data: { name: "Admin", is_admin: true },
-              error: null,
-            }),
+          single: vi.fn().mockResolvedValue({
+            data: { name: "Admin", is_admin: true },
+            error: null,
+          }),
         };
       if (table === "events")
         return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
@@ -320,12 +314,10 @@ describe("Dashboard", () => {
         };
       if (table === "events")
         return {
-          select: vi
-            .fn()
-            .mockResolvedValue({
-              data: [{ id: "evt-1", name: "Test Event" }],
-              error: null,
-            }),
+          select: vi.fn().mockResolvedValue({
+            data: [{ id: "evt-1", name: "Test Event" }],
+            error: null,
+          }),
         };
       return {};
     });

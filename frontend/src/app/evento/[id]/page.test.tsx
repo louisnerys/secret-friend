@@ -74,29 +74,23 @@ vi.mock("@/lib/supabase", () => {
     __mockUpdate: mockUpdate,
     supabase: {
       auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({
-            data: {
-              user: {
-                id: "user-1",
-                email: "test@example.com",
-                user_metadata: { name: "Test" },
-              },
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: "user-1",
+              email: "test@example.com",
+              user_metadata: { name: "Test" },
             },
-            error: null,
-          }),
-        getSession: vi
-          .fn()
-          .mockResolvedValue({
-            data: { session: { access_token: "fake-token" } },
-            error: null,
-          }),
-        onAuthStateChange: vi
-          .fn()
-          .mockReturnValue({
-            data: { subscription: { unsubscribe: vi.fn() } },
-          }),
+          },
+          error: null,
+        }),
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: { access_token: "fake-token" } },
+          error: null,
+        }),
+        onAuthStateChange: vi.fn().mockReturnValue({
+          data: { subscription: { unsubscribe: vi.fn() } },
+        }),
       },
       from: vi.fn((table: string) => {
         const builder: any = {
@@ -557,12 +551,10 @@ describe("EventDetailsPage", () => {
 
   it("handles join error", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-2" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-2" },
+        error: null,
+      }),
     });
     __mockMaybeSingle.mockResolvedValue({
       data: { id: "evt-1", status: "open", creator_id: "user-2" },
@@ -587,12 +579,10 @@ describe("EventDetailsPage", () => {
 
   it("handles draw error", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-1" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-1" },
+        error: null,
+      }),
     });
     __mockMaybeSingle.mockResolvedValue({
       data: { id: "evt-1", status: "open", creator_id: "user-1" },
@@ -621,12 +611,10 @@ describe("EventDetailsPage", () => {
 
   it("allows sending a mural message", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-1" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-1" },
+        error: null,
+      }),
     });
     __mockMaybeSingle.mockResolvedValue({
       data: { id: "evt-1", status: "open", creator_id: "user-1" },
@@ -655,12 +643,10 @@ describe("EventDetailsPage", () => {
 
   it("handles exclusion groups as admin", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-1" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-1" },
+        error: null,
+      }),
     });
     // Mock initial data load
     __mockEq.mockReset();
@@ -740,12 +726,10 @@ describe("EventDetailsPage", () => {
 
   it("allows interacting with wishlist", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-1" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-1" },
+        error: null,
+      }),
     });
 
     __mockEq.mockResolvedValue({
@@ -788,12 +772,10 @@ describe("EventDetailsPage", () => {
 
   it("handles wishlist save error", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open" },
+        error: null,
+      }),
     });
     __mockMaybeSingle.mockResolvedValue({
       data: { id: "evt-1", status: "open" },
@@ -804,11 +786,9 @@ describe("EventDetailsPage", () => {
       error: null,
     });
     __mockUpdate.mockReturnValue({
-      eq: vi
-        .fn()
-        .mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ error: "DB Error" }),
-        }),
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: "DB Error" }),
+      }),
     });
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
@@ -837,12 +817,10 @@ describe("EventDetailsPage", () => {
 
   it("does not submit mural message when input is empty", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-1" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-1" },
+        error: null,
+      }),
     });
     __mockEq.mockResolvedValue({
       data: [{ user_id: "user-1", users: { name: "User 1" } }],
@@ -863,12 +841,10 @@ describe("EventDetailsPage", () => {
 
   it("join success opens wishlist editing", async () => {
     __mockRpc.mockReturnValue({
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({
-          data: { id: "evt-1", status: "open", creator_id: "user-2" },
-          error: null,
-        }),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { id: "evt-1", status: "open", creator_id: "user-2" },
+        error: null,
+      }),
     });
     __mockMaybeSingle.mockResolvedValue({
       data: { id: "evt-1", status: "open", creator_id: "user-2" },
