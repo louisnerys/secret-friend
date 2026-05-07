@@ -168,7 +168,29 @@ export default function Login() {
               className="flex items-center justify-center gap-3 w-full py-4 bg-white text-gray-800 rounded-full border border-gray-300 font-bold tracking-tight hover:bg-gray-50 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {loadingGoogle ? (
-                t("common.connecting")
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-current"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  {t("common.connecting")}
+                </>
               ) : (
                 <>
                   <svg
@@ -273,15 +295,36 @@ export default function Login() {
                 type="submit"
                 id="login-submit-button"
                 disabled={loadingEmail || loadingGoogle}
-                className="w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="flex items-center justify-center gap-2 w-full py-4 bg-primary text-on-primary rounded-full font-bold tracking-tight hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 {loadingEmail ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
-                    <span>{t('common.connecting')}</span>
-                  </div>
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 text-current"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    {t("common.connecting")}
+                  </>
+                ) : isRegister ? (
+                  t("login.sign_up")
                 ) : (
-                  isRegister ? t('login.sign_up') : t('login.sign_in')
+                  t("login.sign_in")
                 )}
               </button>
             </form>

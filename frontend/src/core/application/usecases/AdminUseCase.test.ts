@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AdminUseCase } from './AdminUseCase';
-import { IEventRepository } from '@/core/domain/repositories/IEventRepository';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { AdminUseCase } from "./AdminUseCase";
+import { IEventRepository } from "@/core/domain/repositories/IEventRepository";
 
-describe('AdminUseCase', () => {
+describe("AdminUseCase", () => {
   let useCase: AdminUseCase;
   let mockRepo: IEventRepository;
 
@@ -26,7 +26,7 @@ describe('AdminUseCase', () => {
     useCase = new AdminUseCase(mockRepo);
   });
 
-  it('delegates getAdminMetrics to repository', async () => {
+  it("delegates getAdminMetrics to repository", async () => {
     const mockMetrics = {
       data: {
         totalEvents: 10,
@@ -42,10 +42,10 @@ describe('AdminUseCase', () => {
     expect(result).toEqual(mockMetrics);
   });
 
-  it('returns error if repository fails', async () => {
+  it("returns error if repository fails", async () => {
     const mockError = {
       data: null,
-      error: { message: 'Failed to fetch metrics' },
+      error: { message: "Failed to fetch metrics" },
     };
     vi.mocked(mockRepo.getAdminMetrics).mockResolvedValue(mockError);
 
