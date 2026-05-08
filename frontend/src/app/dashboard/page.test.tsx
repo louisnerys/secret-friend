@@ -119,9 +119,8 @@ describe("Dashboard", () => {
     const { getByText } = render(<Dashboard />);
 
     await waitFor(() => {
-      const card = getByText("Party");
-      fireEvent.click(card);
-      expect(mockPush).toHaveBeenCalledWith("/evento/e1");
+      const link = getByText("Party").closest('a');
+      expect(link?.getAttribute("href")).toBe("/evento/e1");
     });
   });
 
@@ -294,7 +293,7 @@ describe("Dashboard", () => {
     expect(mockPush).toHaveBeenCalledWith("/novo-evento");
   });
 
-  it("navigates to event details page on card click and enter key", async () => {
+  it("navigates to event details page on card link click", async () => {
     const mockUser = { id: "u1" };
     (supabase.auth.getSession as any).mockResolvedValue({
       data: { session: { user: mockUser } },
@@ -327,11 +326,7 @@ describe("Dashboard", () => {
       expect(getByText("Test Event")).toBeDefined();
     });
 
-    const eventCard = getByText("Test Event").closest('div[role="button"]')!;
-    fireEvent.click(eventCard);
-    expect(mockPush).toHaveBeenCalledWith("/evento/evt-1");
-
-    fireEvent.keyDown(eventCard, { key: "Enter" });
-    expect(mockPush).toHaveBeenCalledWith("/evento/evt-1");
+    const eventCardLink = getByText("Test Event").closest('a')!;
+    expect(eventCardLink?.getAttribute("href")).toBe("/evento/evt-1");
   });
 });
