@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -208,15 +209,10 @@ export default function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {events.map((event) => (
-                <div
+                <Link
                   key={event.id}
-                  onClick={() => router.push(`/evento/${event.id}`)}
-                  className="bg-surface-container-lowest rounded-xl p-6 shadow-sm shadow-black/5 relative overflow-hidden group border-l-4 border-secondary cursor-pointer hover:shadow-md transition-all"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && router.push(`/evento/${event.id}`)
-                  }
+                  href={`/evento/${event.id}`}
+                  className="block bg-surface-container-lowest rounded-xl p-6 shadow-sm shadow-black/5 relative overflow-hidden group border-l-4 border-secondary cursor-pointer hover:shadow-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="space-y-1">
@@ -259,7 +255,7 @@ export default function Dashboard() {
                   >
                     star
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -298,9 +294,7 @@ export default function Dashboard() {
             ].map((item) => (
               <div
                 key={item.name}
-                className="flex-shrink-0 w-40 bg-surface-container-low rounded-2xl overflow-hidden shadow-none cursor-pointer hover:shadow-md transition-all"
-                role="button"
-                tabIndex={0}
+                className="flex-shrink-0 w-40 bg-surface-container-low rounded-2xl overflow-hidden shadow-none hover:shadow-md transition-all"
               >
                 <div
                   className="w-full h-32 bg-gradient-to-br from-secondary-container/40 to-primary-container/20 flex items-center justify-center text-5xl"
@@ -336,11 +330,9 @@ export default function Dashboard() {
             {t("dashboard.nav_events")}
           </span>
         </div>
-        <div
-          onClick={() => router.push("/admin")}
-          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer"
-          role="link"
-          tabIndex={0}
+        <Link
+          href="/admin"
+          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
         >
           <span
             className="material-symbols-outlined"
@@ -352,12 +344,10 @@ export default function Dashboard() {
           <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">
             {t("common.admin")}
           </span>
-        </div>
-        <div
+        </Link>
+        <button
           onClick={handleLogout}
-          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer"
-          role="button"
-          tabIndex={0}
+          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
         >
           <span
             className="material-symbols-outlined"
@@ -369,7 +359,7 @@ export default function Dashboard() {
           <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">
             {t("dashboard.nav_profile")}
           </span>
-        </div>
+        </button>
       </nav>
     </div>
   );

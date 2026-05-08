@@ -12,3 +12,7 @@
 ## 2024-05-07 - Loading State Feedback
 **Learning:** Providing an animated visual indicator (like a spinner) alongside text changes for async button submissions offers stronger feedback than text changes alone, reducing user uncertainty during network latency.
 **Action:** Always include an inline animated spinner (`animate-spin` SVG) alongside loading text in primary interactive buttons during asynchronous operations. Ensure proper alignment using flexbox (`flex items-center justify-center gap-2`).
+
+## 2026-05-08 - Semantic HTML for Interactions
+**Learning:** Implementing interactive elements (like cards and navigation items) as `<div>`s with `role="button"`, `tabIndex={0}`, and custom `onKeyDown` handlers breaks expected native accessibility behaviors like 'Open in new tab' functionality or default space/enter key interaction.
+**Action:** Use native semantic elements (`<button>` or `<Link href="...">`) instead of ARIA roles on `<div>`s for interactive elements to retain complete keyboard and link navigation experiences automatically.
