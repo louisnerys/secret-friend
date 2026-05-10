@@ -152,6 +152,7 @@ export default function NewEvent() {
               <input
                 id="event-date"
                 type="date"
+                min={new Date().toLocaleDateString("en-CA")}
                 value={revealDate}
                 onChange={(e) => setRevealDate(e.target.value)}
                 className="w-full bg-surface-container-highest border-none rounded-lg pl-12 pr-4 py-4 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 text-on-surface"
