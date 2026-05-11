@@ -243,6 +243,7 @@ export default function DrawPage(props: DrawPageProps) {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder={t("draw.placeholder")}
+                aria-label={t("draw.placeholder")}
                 className="w-full bg-surface-container-highest border-none rounded-full px-5 py-3 text-sm focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 text-on-surface"
               />
             </div>

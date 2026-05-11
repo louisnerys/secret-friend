@@ -16,3 +16,7 @@
 ## 2026-05-08 - Semantic HTML for Interactions
 **Learning:** Implementing interactive elements (like cards and navigation items) as `<div>`s with `role="button"`, `tabIndex={0}`, and custom `onKeyDown` handlers breaks expected native accessibility behaviors like 'Open in new tab' functionality or default space/enter key interaction.
 **Action:** Use native semantic elements (`<button>` or `<Link href="...">`) instead of ARIA roles on `<div>`s for interactive elements to retain complete keyboard and link navigation experiences automatically.
+
+## 2024-05-11 - Input Labels with Aria
+**Learning:** Form inputs that lack visual `<label>` elements, like chat inputs or inline group additions, create an inaccessible experience. Placeholders are insufficient as they disappear when typing and are often skipped by screen readers.
+**Action:** When a visible `<label>` is not present, always provide an `aria-label` on the `<input>` element to explicitly describe its purpose to screen readers.

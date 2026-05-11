@@ -334,6 +334,7 @@ export default function EventDetalhes(props: EventPageProps) {
                     value={newExclusionGroupName}
                     onChange={(e) => setNewExclusionGroupName(e.target.value)}
                     placeholder={t("event.exclusion_group_placeholder")}
+                    aria-label={t("event.exclusion_group_placeholder")}
                     className="flex-1 bg-surface border border-outline-variant rounded-xl px-4 py-2 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                     maxLength={50}
                   />
@@ -517,6 +518,7 @@ export default function EventDetalhes(props: EventPageProps) {
                   value={newMuralMsg}
                   onChange={(e) => setNewMuralMsg(e.target.value)}
                   placeholder={t("event.mural_placeholder")}
+                  aria-label={t("event.mural_placeholder")}
                   className="w-full bg-surface-container-highest border-none rounded-full px-5 py-3 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 text-on-surface"
                 />
               </div>
