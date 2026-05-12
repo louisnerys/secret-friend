@@ -37,3 +37,19 @@ jobs:
           rulesets: 'pmd-ruleset.xml'
           sourcePath: 'frontend/src'
           analyzeModifiedFilesOnly: false
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Run E2E Tests
+        run: deno run --allow-net --allow-env tests/e2e.ts
