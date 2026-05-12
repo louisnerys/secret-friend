@@ -49,6 +49,8 @@ export default function EventDetalhes(props: EventPageProps) {
     newExclusionGroupName,
     setNewExclusionGroupName,
     loading,
+    isDrawing,
+    isJoining,
     user,
     myWishlist,
     setMyWishlist,
@@ -266,23 +268,52 @@ export default function EventDetalhes(props: EventPageProps) {
           {!isParticipant && event.status === "open" && (
             <button
               onClick={handleJoin}
-              className="bg-primary text-on-primary font-bold py-4 px-8 rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:shadow-[0_12px_32px_rgba(122,0,26,0.3)] transition-all flex items-center gap-2"
+              disabled={isJoining}
+              className="bg-primary text-on-primary font-bold py-4 px-8 rounded-full shadow-[0_8px_24px_rgba(122,0,26,0.2)] hover:shadow-[0_12px_32px_rgba(122,0,26,0.3)] transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <MSO>person_add</MSO>
-              {t("event.join_event")}
+              {isJoining ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-current"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  {t("common.loading")}
+                </>
+              ) : (
+                <>
+                  <MSO>person_add</MSO>
+                  {t("event.join_event")}
+                </>
+              )}
             </button>
           )}
 
           {isCreator && event.status === "open" && (
             <button
               onClick={handleDraw}
-              disabled={participants.length < 3}
+              disabled={participants.length < 3 || isDrawing}
               title={
                 participants.length < 3
                   ? t("event.draw_requirement")
                   : t("event.draw_now")
               }
-              className={`w-full bg-surface-container-highest border-2 border-secondary/30 text-primary p-6 rounded-2xl flex items-center justify-between group transition-all ${participants.length < 3 ? "opacity-50 cursor-not-allowed" : "hover:bg-secondary-fixed"}`}
+              className={`w-full bg-surface-container-highest border-2 border-secondary/30 text-primary p-6 rounded-2xl flex items-center justify-between group transition-all ${participants.length < 3 || isDrawing ? "opacity-50 cursor-not-allowed" : "hover:bg-secondary-fixed"}`}
             >
               <div className="text-left">
                 <p className="font-headline text-xl">{t("event.draw_now")}</p>
@@ -298,7 +329,30 @@ export default function EventDetalhes(props: EventPageProps) {
                 className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
                 aria-hidden="true"
               >
-                <MSO>casino</MSO>
+                {isDrawing ? (
+                  <svg
+                    className="animate-spin h-6 w-6 text-current"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <MSO size={24}>auto_awesome</MSO>
+                )}
               </div>
             </button>
           )}

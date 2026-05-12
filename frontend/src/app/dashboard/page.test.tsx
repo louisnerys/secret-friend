@@ -119,7 +119,7 @@ describe("Dashboard", () => {
     const { getByText } = render(<Dashboard />);
 
     await waitFor(() => {
-      const link = getByText("Party").closest('a');
+      const link = getByText("Party").closest("a");
       expect(link?.getAttribute("href")).toBe("/evento/e1");
     });
   });
@@ -326,7 +326,7 @@ describe("Dashboard", () => {
       expect(getByText("Test Event")).toBeDefined();
     });
 
-    const eventCardLink = getByText("Test Event").closest('a')!;
+    const eventCardLink = getByText("Test Event").closest("a")!;
     expect(eventCardLink?.getAttribute("href")).toBe("/evento/evt-1");
   });
 });
