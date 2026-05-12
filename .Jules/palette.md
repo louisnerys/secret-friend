@@ -16,6 +16,13 @@
 ## 2026-05-08 - Semantic HTML for Interactions
 **Learning:** Implementing interactive elements (like cards and navigation items) as `<div>`s with `role="button"`, `tabIndex={0}`, and custom `onKeyDown` handlers breaks expected native accessibility behaviors like 'Open in new tab' functionality or default space/enter key interaction.
 **Action:** Use native semantic elements (`<button>` or `<Link href="...">`) instead of ARIA roles on `<div>`s for interactive elements to retain complete keyboard and link navigation experiences automatically.
+<<<<<<< palette-date-input-min-constraint-3059481754099253844
 ## 2024-05-18 - Local Date Formatting for Input Min Constraints
 **Learning:** Using `new Date().toISOString().split("T")[0]` for `min` attributes in `<input type="date">` is prone to UTC timezone offset bugs depending on the user location and the time of day, potentially disabling the current day improperly.
 **Action:** Use `new Date().toLocaleDateString("en-CA")` to format dates consistently into `YYYY-MM-DD` while respecting the local browser timezone to accurately enforce "today".
+=======
+
+## 2024-05-09 - Inline Loading States for Asynchronous Actions
+**Learning:** Replacing full-page loading flashes with inline loaders directly on action buttons (e.g., 'Draw Secret Santa' or 'Join Event') significantly improves the perceived performance and provides clearer context without disrupting the user's focus.
+**Action:** Always implement local loading states inside controllers instead of relying solely on a global page loading state to handle feedback for primary interactions.
+>>>>>>> main
