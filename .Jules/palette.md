@@ -17,14 +17,18 @@
 **Learning:** Implementing interactive elements (like cards and navigation items) as `<div>`s with `role="button"`, `tabIndex={0}`, and custom `onKeyDown` handlers breaks expected native accessibility behaviors like 'Open in new tab' functionality or default space/enter key interaction.
 **Action:** Use native semantic elements (`<button>` or `<Link href="...">`) instead of ARIA roles on `<div>`s for interactive elements to retain complete keyboard and link navigation experiences automatically.
 
+## 2024-05-09 - Inline Loading States for Asynchronous Actions
+**Learning:** Replacing full-page loading flashes with inline loaders directly on action buttons (e.g., 'Draw Secret Santa' or 'Join Event') significantly improves the perceived performance and provides clearer context without disrupting the user's focus.
+**Action:** Always implement local loading states inside controllers instead of relying solely on a global page loading state to handle feedback for primary interactions.
+
+## 2024-05-10 - Local Date Formatting for Input Min Constraints
+**Learning:** Using `new Date().toISOString().split("T")[0]` for `min` attributes in `<input type="date">` is prone to UTC timezone offset bugs depending on the user location and the time of day, potentially disabling the current day improperly.
+**Action:** Use `new Date().toLocaleDateString("en-CA")` to format dates consistently into `YYYY-MM-DD` while respecting the local browser timezone to accurately enforce "today".
+
 ## 2024-05-11 - Input Labels with Aria
 **Learning:** Form inputs that lack visual `<label>` elements, like chat inputs or inline group additions, create an inaccessible experience. Placeholders are insufficient as they disappear when typing and are often skipped by screen readers.
 **Action:** When a visible `<label>` is not present, always provide an `aria-label` on the `<input>` element to explicitly describe its purpose to screen readers.
 
-## 2024-05-18 - Local Date Formatting for Input Min Constraints
-**Learning:** Using `new Date().toISOString().split("T")[0]` for `min` attributes in `<input type="date">` is prone to UTC timezone offset bugs depending on the user location and the time of day, potentially disabling the current day improperly.
-**Action:** Use `new Date().toLocaleDateString("en-CA")` to format dates consistently into `YYYY-MM-DD` while respecting the local browser timezone to accurately enforce "today".
-
-## 2024-05-09 - Inline Loading States for Asynchronous Actions
-**Learning:** Replacing full-page loading flashes with inline loaders directly on action buttons (e.g., 'Draw Secret Santa' or 'Join Event') significantly improves the perceived performance and provides clearer context without disrupting the user's focus.
-**Action:** Always implement local loading states inside controllers instead of relying solely on a global page loading state to handle feedback for primary interactions.
+## 2024-05-12 - Explicit ARIA Labels for Placeholder-Only Inputs
+**Learning:** Found multiple inputs and textareas (e.g., Wishlist, Exclusion Groups, Mural Messages, Chat Messages) that relied exclusively on the `placeholder` attribute for context. `placeholder` text is frequently skipped by screen readers or provides insufficient context, making it an accessibility anti-pattern.
+**Action:** Always ensure that inputs without a visible `<label>` element have an explicit `aria-label` attribute to properly communicate their purpose to assistive technologies.

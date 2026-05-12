@@ -209,6 +209,7 @@ export default function EventDetalhes(props: EventPageProps) {
                     value={myWishlist}
                     onChange={(e) => setMyWishlist(e.target.value)}
                     placeholder={t("event.wishlist_placeholder")}
+                    aria-label={t("event.wishlist_placeholder")}
                     rows={3}
                     className="w-full bg-surface-container-highest border-none rounded-lg px-4 py-4 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 resize-none text-on-surface"
                   />
