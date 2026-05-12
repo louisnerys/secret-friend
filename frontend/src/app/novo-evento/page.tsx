@@ -152,6 +152,7 @@ export default function NewEvent() {
               <input
                 id="event-date"
                 type="date"
+                min={new Date().toLocaleDateString("en-CA")}
                 value={revealDate}
                 onChange={(e) => setRevealDate(e.target.value)}
                 min={new Date().toLocaleDateString("en-CA")}

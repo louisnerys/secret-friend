@@ -21,6 +21,8 @@ export function useEventDetailsController(eventId: string) {
   const [newExclusionGroupName, setNewExclusionGroupName] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [myWishlist, setMyWishlist] = useState("");
   const [isEditingWishlist, setIsEditingWishlist] = useState(false);
@@ -66,11 +68,13 @@ export function useEventDetailsController(eventId: string) {
 
   const handleJoin = async () => {
     if (!user) return;
+    setIsJoining(true);
     const { error } = await eventDetailsUseCase.joinEvent(eventId, user.id);
     if (!error) {
       setTimeout(() => fetchData(), 0);
       setIsEditingWishlist(true);
     } else alert(t("event.join_error") + ": " + error.message);
+    setIsJoining(false);
   };
 
   const handleSaveWishlist = async () => {
@@ -89,7 +93,7 @@ export function useEventDetailsController(eventId: string) {
   };
 
   const handleDraw = async () => {
-    setLoading(true);
+    setIsDrawing(true);
     const { data: sessionData } = await supabase.auth.getSession();
     const res = await eventDetailsUseCase.performDraw(
       eventId,
@@ -101,8 +105,8 @@ export function useEventDetailsController(eventId: string) {
       setTimeout(() => fetchData(), 0);
     } else {
       alert(t("event.draw_error"));
-      setLoading(false);
     }
+    setIsDrawing(false);
   };
 
   const handleSendMuralMsg = async (e: React.FormEvent) => {
@@ -170,6 +174,8 @@ export function useEventDetailsController(eventId: string) {
     newExclusionGroupName,
     setNewExclusionGroupName,
     loading,
+    isDrawing,
+    isJoining,
     user,
     myWishlist,
     setMyWishlist,

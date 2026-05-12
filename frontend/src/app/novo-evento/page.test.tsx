@@ -40,7 +40,7 @@ describe("NewEvent", () => {
       target: { value: "Holiday Party" },
     });
     fireEvent.change(getByLabelText("newEvent.fields.reveal_date"), {
-      target: { value: "2026-12-25" },
+      target: { value: "2030-12-25" },
     });
 
     const submitBtn = getByText("newEvent.create_button");
