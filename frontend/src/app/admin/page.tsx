@@ -2,8 +2,6 @@
 
 import { useAdminController } from "@/presentation/controllers/useAdminController";
 
-import { AdminMetrics } from "@/lib/types";
-
 export default function AdminDashboard() {
   const { t, metrics, loading, error, router, handleMakeMeAdmin } =
     useAdminController();
