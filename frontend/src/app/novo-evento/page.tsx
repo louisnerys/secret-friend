@@ -155,7 +155,6 @@ export default function NewEvent() {
                 min={new Date().toLocaleDateString("en-CA")}
                 value={revealDate}
                 onChange={(e) => setRevealDate(e.target.value)}
-                min={new Date().toLocaleDateString("en-CA")}
                 className="w-full bg-surface-container-highest border-none rounded-lg pl-12 pr-4 py-4 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 text-on-surface"
               />
               <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary transition-all duration-500 group-focus-within:w-full" />
