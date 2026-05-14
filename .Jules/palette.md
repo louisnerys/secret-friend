@@ -32,3 +32,7 @@
 ## 2024-05-12 - Explicit ARIA Labels for Placeholder-Only Inputs
 **Learning:** Found multiple inputs and textareas (e.g., Wishlist, Exclusion Groups, Mural Messages, Chat Messages) that relied exclusively on the `placeholder` attribute for context. `placeholder` text is frequently skipped by screen readers or provides insufficient context, making it an accessibility anti-pattern.
 **Action:** Always ensure that inputs without a visible `<label>` element have an explicit `aria-label` attribute to properly communicate their purpose to assistive technologies.
+
+## 2024-05-14 - Empty State Inline CTA & Visual Boundaries
+**Learning:** Empty states without immediate, actionable buttons force users to hunt for the primary action (e.g., searching for a generic "Create" button at the top of the page). Without clear visual boundaries, the empty state can feel like missing content rather than an intentional space.
+**Action:** When designing empty states, always include a distinct visual boundary (like a dashed border) to indicate intentional emptiness, and provide a clear, inline Call-To-Action (CTA) button directly within the empty state container to guide the user's next step immediately.
