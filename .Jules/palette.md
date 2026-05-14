@@ -32,3 +32,6 @@
 ## 2024-05-12 - Explicit ARIA Labels for Placeholder-Only Inputs
 **Learning:** Found multiple inputs and textareas (e.g., Wishlist, Exclusion Groups, Mural Messages, Chat Messages) that relied exclusively on the `placeholder` attribute for context. `placeholder` text is frequently skipped by screen readers or provides insufficient context, making it an accessibility anti-pattern.
 **Action:** Always ensure that inputs without a visible `<label>` element have an explicit `aria-label` attribute to properly communicate their purpose to assistive technologies.
+## 2026-05-14 - Added aria-hidden to decorative icons
+**Learning:** In standard icon component wrappers (like MSO used across the app), screen readers will announce the icon name (e.g., 'visibility') unless explicitly hidden, causing confusing screen reader output for interactive elements that already have text labels.
+**Action:** Always ensure that decorative icon fonts have `aria-hidden="true"` by default in their base wrapper component.
