@@ -618,12 +618,16 @@ with check ((auth.uid() = user_id));
 
 
 
-  create policy "Users can only see their own participant record"
+  create policy "Users can view participants of their events"
   on "public"."participants"
   as permissive
   for select
   to public
-using ((user_id = auth.uid()));
+using (((EXISTS ( SELECT 1
+   FROM public.participants p
+  WHERE ((p.event_id = participants.event_id) AND (p.user_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM public.events e
+  WHERE ((e.id = participants.event_id) AND (e.creator_id = auth.uid()))))));
 
 
 
@@ -672,12 +676,16 @@ using ((auth.uid() = id));
 
 
 
-  create policy "Users can view all users"
+  create policy "Users can view shared profiles"
   on "public"."users"
   as permissive
   for select
   to public
-using (true);
+using (((auth.uid() = id) OR (EXISTS ( SELECT 1
+   FROM public.participants p1
+  WHERE ((p1.user_id = auth.uid()) AND (EXISTS ( SELECT 1
+   FROM public.participants p2
+  WHERE ((p2.event_id = p1.event_id) AND (p2.user_id = users.id)))))))));
 
 
 
