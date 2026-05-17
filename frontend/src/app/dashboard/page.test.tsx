@@ -286,9 +286,9 @@ describe("Dashboard", () => {
       return {};
     });
 
-    const { getByText } = render(<Dashboard />);
+    const { getAllByText } = render(<Dashboard />);
     await waitFor(() => {
-      fireEvent.click(getByText("dashboard.create_event"));
+      fireEvent.click(getAllByText("dashboard.create_event")[0]);
     });
     expect(mockPush).toHaveBeenCalledWith("/novo-evento");
   });
