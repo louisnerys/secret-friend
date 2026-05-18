@@ -333,6 +333,7 @@ export default function Dashboard() {
         <Link
           href="/admin"
           className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
+          aria-label={t("common.admin")}
         >
           <span
             className="material-symbols-outlined"
@@ -348,6 +349,7 @@ export default function Dashboard() {
         <button
           onClick={handleLogout}
           className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
+          aria-label={t("dashboard.nav_profile")}
         >
           <span
             className="material-symbols-outlined"

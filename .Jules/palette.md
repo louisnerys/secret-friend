@@ -35,3 +35,7 @@
 ## 2026-05-14 - Added aria-hidden to decorative icons
 **Learning:** In standard icon component wrappers (like MSO used across the app), screen readers will announce the icon name (e.g., 'visibility') unless explicitly hidden, causing confusing screen reader output for interactive elements that already have text labels.
 **Action:** Always ensure that decorative icon fonts have `aria-hidden="true"` by default in their base wrapper component.
+
+## 2024-05-18 - Avoid Redundant `aria-label`s on Navigation Buttons
+**Learning:** Adding an `aria-label` to a button that already contains visible, descriptive text (e.g., `<span className="font-label">{t("dashboard.nav_events")}</span>`) is an accessibility anti-pattern. Screen readers will read the `aria-label` and potentially the visible text as well, creating redundant noise. Instead, purely decorative elements within the button (like SVGs) should be hidden with `aria-hidden="true"`, allowing the screen reader to naturally read the existing visible text.
+**Action:** Do not duplicate visible text in `aria-label` attributes. Prioritize hiding decorative visual elements with `aria-hidden="true"` rather than overriding the entire container's label.

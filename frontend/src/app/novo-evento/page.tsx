@@ -215,6 +215,7 @@ export default function NewEvent() {
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <circle
                       className="opacity-25"
@@ -268,6 +269,7 @@ export default function NewEvent() {
           <button
             onClick={() => router.push("/dashboard")}
             className="flex flex-col items-center justify-center text-primary bg-primary/5 rounded-full px-4 py-2"
+            aria-label={t("dashboard.nav_events")}
           >
             <span
               className="material-symbols-outlined"
@@ -280,7 +282,10 @@ export default function NewEvent() {
               {t("dashboard.nav_events")}
             </span>
           </button>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
+          <button
+            className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2"
+            aria-label={t("common.invite")}
+          >
             <span
               className="material-symbols-outlined"
               style={{ fontSize: 22 }}
@@ -292,7 +297,10 @@ export default function NewEvent() {
               {t("common.invite")}
             </span>
           </button>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
+          <button
+            className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2"
+            aria-label={t("dashboard.nav_profile")}
+          >
             <span
               className="material-symbols-outlined"
               style={{ fontSize: 22 }}
