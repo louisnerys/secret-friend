@@ -44,3 +44,7 @@
 ## 2024-05-16 - Empty State Actionability
 **Learning:** Empty states without immediate, inline calls-to-action force users to search the interface for the appropriate "create" or "add" button. This increases cognitive load and friction for new or onboarding users.
 **Action:** When designing empty states (like "No Events"), always include a distinct visual boundary (like a dashed border) to indicate intentional emptiness, and provide a clear, inline Call-To-Action (CTA) button directly within the empty state container to guide the user's next step immediately.
+
+## 2024-05-17 - Actionable Empty States
+**Learning:** Empty states (like 'No Events' on the dashboard) without a clear visual boundary and a direct inline Call-To-Action (CTA) can leave users confused about what to do next, increasing cognitive load.
+**Action:** When designing empty states, always include a distinct visual boundary (like a dashed border) to indicate intentional emptiness, and provide an inline CTA button directly within the empty state container to guide the user's next step. Update related UI test queries (e.g. using `getAllByText`) when this creates duplicate CTA buttons on the same page.
