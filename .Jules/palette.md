@@ -35,3 +35,7 @@
 ## 2026-05-14 - Added aria-hidden to decorative icons
 **Learning:** In standard icon component wrappers (like MSO used across the app), screen readers will announce the icon name (e.g., 'visibility') unless explicitly hidden, causing confusing screen reader output for interactive elements that already have text labels.
 **Action:** Always ensure that decorative icon fonts have `aria-hidden="true"` by default in their base wrapper component.
+
+## 2024-05-15 - Empty State Visual Boundaries and Inline CTAs
+**Learning:** Empty states without a defined boundary blend into the surrounding layout, failing to clearly signal an intentional lack of content. Furthermore, requiring users to locate a global CTA (like a floating button) from within an empty state increases cognitive load.
+**Action:** Always wrap empty states in a clear visual boundary (such as a dashed border) and include an inline Call-To-Action directly within the empty state container to guide the user's immediate next step.
