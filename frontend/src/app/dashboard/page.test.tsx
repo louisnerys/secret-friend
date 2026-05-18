@@ -288,8 +288,7 @@ describe("Dashboard", () => {
 
     const { getAllByText } = render(<Dashboard />);
     await waitFor(() => {
-      const createButtons = getAllByText("dashboard.create_event");
-      fireEvent.click(createButtons[0]);
+      fireEvent.click(getAllByText("dashboard.create_event")[0]);
     });
     expect(mockPush).toHaveBeenCalledWith("/novo-evento");
   });

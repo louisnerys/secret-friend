@@ -40,3 +40,7 @@
 ## 2026-05-14 - Added aria-hidden to decorative icons
 **Learning:** In standard icon component wrappers (like MSO used across the app), screen readers will announce the icon name (e.g., 'visibility') unless explicitly hidden, causing confusing screen reader output for interactive elements that already have text labels.
 **Action:** Always ensure that decorative icon fonts have `aria-hidden="true"` by default in their base wrapper component.
+
+## 2024-05-16 - Empty State Actionability
+**Learning:** Empty states without immediate, inline calls-to-action force users to search the interface for the appropriate "create" or "add" button. This increases cognitive load and friction for new or onboarding users.
+**Action:** When designing empty states (like "No Events"), always include a distinct visual boundary (like a dashed border) to indicate intentional emptiness, and provide a clear, inline Call-To-Action (CTA) button directly within the empty state container to guide the user's next step immediately.

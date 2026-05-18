@@ -191,35 +191,35 @@ export default function Dashboard() {
           </div>
 
           {events.length === 0 ? (
-            <div className="bg-surface-container-low border-2 border-dashed border-outline-variant/30 rounded-2xl p-10 text-center flex flex-col items-center justify-center space-y-5">
-              <div
-                className="w-24 h-24 bg-secondary-container/20 rounded-full flex items-center justify-center mb-2"
+            <div className="bg-surface-container-low border-2 border-dashed border-outline-variant rounded-2xl p-10 text-center space-y-4">
+              <span
+                className="material-symbols-outlined text-secondary-container"
+                style={{ fontSize: 56, fontVariationSettings: "'FILL' 1" }}
                 aria-hidden="true"
               >
-                <span
-                  className="material-symbols-outlined text-secondary"
-                  style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}
+                celebration
+              </span>
+              <h4 className="font-display text-xl font-bold text-on-surface">
+                {t("dashboard.no_events_title")}
+              </h4>
+              <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
+                {t("dashboard.no_events_desc")}
+              </p>
+              <div className="pt-2 flex justify-center">
+                <button
+                  onClick={() => router.push("/novo-evento")}
+                  className="inline-flex items-center gap-2 bg-primary text-on-primary hover:bg-primary/90 transition-colors py-2.5 px-6 rounded-full font-bold text-sm shadow-sm"
                 >
-                  celebration
-                </span>
+                  <span
+                    className="material-symbols-outlined"
+                    style={{ fontSize: 18 }}
+                    aria-hidden="true"
+                  >
+                    add
+                  </span>
+                  {t("dashboard.create_event")}
+                </button>
               </div>
-              <div className="space-y-2">
-                <h4 className="font-display text-xl font-bold text-on-surface">
-                  {t("dashboard.no_events_title")}
-                </h4>
-                <p className="text-on-surface-variant text-sm max-w-xs mx-auto leading-relaxed">
-                  {t("dashboard.no_events_desc")}
-                </p>
-              </div>
-              <button
-                onClick={() => router.push("/novo-evento")}
-                className="mt-4 bg-primary/10 text-primary hover:bg-primary/20 hover:scale-105 active:scale-95 transition-all font-bold py-2.5 px-6 rounded-full flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                  add
-                </span>
-                {t("dashboard.create_event")}
-              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
