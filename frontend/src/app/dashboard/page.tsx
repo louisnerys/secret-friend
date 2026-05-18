@@ -191,7 +191,7 @@ export default function Dashboard() {
           </div>
 
           {events.length === 0 ? (
-            <div className="bg-surface-container-low rounded-2xl p-10 text-center space-y-4">
+            <div className="bg-surface-container-low rounded-2xl p-10 text-center space-y-4 border-2 border-dashed border-outline-variant">
               <span
                 className="material-symbols-outlined text-secondary-container"
                 style={{ fontSize: 56, fontVariationSettings: "'FILL' 1" }}
@@ -205,6 +205,19 @@ export default function Dashboard() {
               <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
                 {t("dashboard.no_events_desc")}
               </p>
+              <button
+                onClick={() => router.push("/novo-evento")}
+                className="mt-6 mx-auto bg-primary text-on-primary py-2 px-6 rounded-full font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+              >
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 20 }}
+                  aria-hidden="true"
+                >
+                  add
+                </span>
+                {t("dashboard.create_event")}
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
