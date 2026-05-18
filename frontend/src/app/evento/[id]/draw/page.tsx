@@ -20,6 +20,7 @@ const MSO = ({
 }) => (
   <span
     className="material-symbols-outlined"
+    aria-hidden="true"
     style={{
       fontSize: size,
       fontVariationSettings: fill ? "'FILL' 1" : "'FILL' 0",

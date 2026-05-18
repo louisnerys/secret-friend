@@ -36,3 +36,7 @@
 ## 2024-05-14 - Empty State Inline CTA & Visual Boundaries
 **Learning:** Empty states without immediate, actionable buttons force users to hunt for the primary action (e.g., searching for a generic "Create" button at the top of the page). Without clear visual boundaries, the empty state can feel like missing content rather than an intentional space.
 **Action:** When designing empty states, always include a distinct visual boundary (like a dashed border) to indicate intentional emptiness, and provide a clear, inline Call-To-Action (CTA) button directly within the empty state container to guide the user's next step immediately.
+
+## 2026-05-14 - Added aria-hidden to decorative icons
+**Learning:** In standard icon component wrappers (like MSO used across the app), screen readers will announce the icon name (e.g., 'visibility') unless explicitly hidden, causing confusing screen reader output for interactive elements that already have text labels.
+**Action:** Always ensure that decorative icon fonts have `aria-hidden="true"` by default in their base wrapper component.
