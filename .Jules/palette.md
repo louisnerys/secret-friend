@@ -48,3 +48,7 @@
 ## 2024-05-17 - Actionable Empty States
 **Learning:** Empty states (like 'No Events' on the dashboard) without a clear visual boundary and a direct inline Call-To-Action (CTA) can leave users confused about what to do next, increasing cognitive load.
 **Action:** When designing empty states, always include a distinct visual boundary (like a dashed border) to indicate intentional emptiness, and provide an inline CTA button directly within the empty state container to guide the user's next step. Update related UI test queries (e.g. using `getAllByText`) when this creates duplicate CTA buttons on the same page.
+
+## 2024-05-18 - Avoid Redundant `aria-label`s on Navigation Buttons
+**Learning:** Adding an `aria-label` to a button that already contains visible, descriptive text (e.g., `<span className="font-label">{t("dashboard.nav_events")}</span>`) is an accessibility anti-pattern. Screen readers will read the `aria-label` and potentially the visible text as well, creating redundant noise. Instead, purely decorative elements within the button (like SVGs) should be hidden with `aria-hidden="true"`, allowing the screen reader to naturally read the existing visible text.
+**Action:** Do not duplicate visible text in `aria-label` attributes. Prioritize hiding decorative visual elements with `aria-hidden="true"` rather than overriding the entire container's label.
