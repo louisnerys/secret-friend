@@ -143,7 +143,7 @@ describe("NewEvent", () => {
 
   it("navigates to dashboard via bottom nav", () => {
     const { getByText } = render(<NewEvent />);
-    fireEvent.click(getByText("dashboard.nav_events"));
-    expect(mockPush).toHaveBeenCalledWith("/dashboard");
+    const link = getByText("dashboard.nav_events").closest("a");
+    expect(link?.getAttribute("href")).toBe("/dashboard");
   });
 });

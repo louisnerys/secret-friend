@@ -12,8 +12,9 @@ const eventDrawUseCase = new EventDrawUseCase(eventRepository);
 export function useEventDrawController(eventId: string) {
   const { t, i18n } = useTranslation();
   const [myDrawn, setMyDrawn] = useState<{ name: string } | null>(null);
+  const [myDrawnId, setMyDrawnId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Partial<PrivateMessage>[]>([]);
-  const [activeChat, setActiveChat] = useState<"drawn" | "drawer">("drawn");
+  const [activeChat, setActiveChat] = useState<"drawn" | "drawer">( "drawn");
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
@@ -44,6 +45,8 @@ export function useEventDrawController(eventId: string) {
       return;
     }
 
+    setMyDrawnId(me.drawn_id);
+
     const { data: drawn } = await supabase
       .from("users")
       .select("name")
@@ -59,13 +62,7 @@ export function useEventDrawController(eventId: string) {
     );
 
     if (privMsgs) {
-      const formatted = privMsgs.map((m: PrivateMessage) => ({
-        ...m,
-        is_mine: m.sender_id === authData.user.id,
-        sender_display:
-          m.sender_id === authData.user.id ? "You" : m.sender_display,
-      }));
-      setMessages(formatted as Partial<PrivateMessage>[]);
+      setMessages(privMsgs as Partial<PrivateMessage>[]);
     }
     setLoading(false);
   }, [eventId, router, t]);
@@ -75,6 +72,7 @@ export function useEventDrawController(eventId: string) {
   }, [fetchDrawnAndMessages]);
 
   useEffect(() => {
+    if (!myDrawnId) return;
     let channel: RealtimeChannel;
 
     const setupRealtime = async () => {
@@ -93,13 +91,55 @@ export function useEventDrawController(eventId: string) {
             filter: `event_id=eq.${eventId}`,
           },
           (payload) => {
-            const newMsg = payload.new as PrivateMessage;
-            if (
-              newMsg.sender_id !== myUserId &&
-              newMsg.receiver_id === myUserId
-            ) {
-              setMessages((prev) => [...prev, { ...newMsg, is_mine: false }]);
+            const newMsg = payload.new as any;
+            
+            // Check if this message involves us
+            const isSender = newMsg.sender_id === myUserId;
+            const isRecipient = newMsg.recipient_id === myUserId;
+            
+            if (!isSender && !isRecipient) return;
+
+            // Determine chat_type
+            let chat_type: "drawn" | "drawer" = "drawer";
+            if (isSender) {
+              if (newMsg.recipient_id === myDrawnId) {
+                chat_type = "drawn";
+              }
+            } else {
+              if (newMsg.sender_id === myDrawnId) {
+                chat_type = "drawn";
+              }
             }
+
+            // Check if it's already in state to avoid duplicate optimistic messages
+            setMessages((prev) => {
+              if (
+                prev.some(
+                  (m) =>
+                    m.id === newMsg.id ||
+                    (m.is_mine &&
+                      m.text === newMsg.text &&
+                      Math.abs(
+                        new Date(m.created_at!).getTime() -
+                          new Date(newMsg.created_at).getTime(),
+                      ) < 5000),
+                )
+              ) {
+                return prev;
+              }
+
+              const formattedMsg: Partial<PrivateMessage> = {
+                id: newMsg.id,
+                event_id: newMsg.event_id,
+                chat_type,
+                text: newMsg.text,
+                created_at: newMsg.created_at,
+                is_mine: isSender,
+                sender_display: isSender ? "Você" : "Seu Amigo Secreto",
+              };
+
+              return [...prev, formattedMsg];
+            });
           },
         )
         .subscribe();
@@ -110,7 +150,7 @@ export function useEventDrawController(eventId: string) {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, [eventId]);
+  }, [eventId, myDrawnId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });

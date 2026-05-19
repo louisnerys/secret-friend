@@ -313,15 +313,12 @@ describe("EventDetailsPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByRole("button", { name: /event.nav_draw/i }),
+        screen.queryByRole("link", { name: /event.nav_draw/i }),
       ).not.toBeNull();
     });
 
-    const roomBtn = screen.getByRole("button", { name: /event.nav_draw/i });
-    await act(async () => {
-      fireEvent.click(roomBtn);
-    });
-    expect(mockPush).toHaveBeenCalledWith("/evento/evt-1/draw");
+    const roomLink = screen.getByRole("link", { name: /event.nav_draw/i });
+    expect(roomLink.getAttribute("href")).toBe("/evento/evt-1/draw");
   });
 
   it("allows adding a participant (join)", async () => {
@@ -724,7 +721,7 @@ describe("EventDetailsPage", () => {
     vi.useRealTimers();
   });
 
-  it("allows interacting with wishlist", async () => {
+  it("allows interacting with wishlist (adding and deleting)", async () => {
     __mockRpc.mockReturnValue({
       maybeSingle: vi.fn().mockResolvedValue({
         data: { id: "evt-1", status: "open", creator_id: "user-1" },
@@ -734,43 +731,55 @@ describe("EventDetailsPage", () => {
 
     __mockEq.mockResolvedValue({
       data: [
-        { user_id: "user-1", users: { name: "User 1" }, wishlist: "old list" },
+        { user_id: "user-1", users: { name: "User 1" } },
       ],
       error: null,
     });
-    __mockOrder.mockResolvedValue({ data: [], error: null });
+
+    // Mock initial fetchWishlistItems via mockOrder
+    __mockOrder.mockResolvedValue({
+      data: [{ id: "w-1", description: "old book" }],
+      error: null,
+    });
 
     render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
 
-    // Wait for the wishlist header to appear
-    await screen.findByText("event.my_wishlist");
+    // Wait for the wishlist items to render
+    await screen.findByText("old book");
 
-    // Open wishlist editor
-    const editBtn = await screen.findByRole("button", { name: /event\.edit/i });
+    // Test Delete Item
+    __mockDelete.mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
+
+    const deleteBtn = screen.getByLabelText("common.delete old book");
     await act(async () => {
-      fireEvent.click(editBtn);
+      fireEvent.click(deleteBtn);
     });
 
-    // Change wishlist
-    const input = await screen.findByPlaceholderText(
-      "event.wishlist_placeholder",
-    );
-    fireEvent.change(input, { target: { value: "New Wishlist Item" } });
+    expect(__mockDelete).toHaveBeenCalled();
 
-    // Save wishlist
-    const saveBtn = await screen.findByText("common.save");
-    __mockUpdate.mockReturnValue({
-      eq: vi
-        .fn()
-        .mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+    // Test Add Item
+    const input = screen.getByPlaceholderText("event.wishlist_placeholder");
+    fireEvent.change(input, { target: { value: "new toy" } });
+
+    __mockInsert.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: { id: "w-2", description: "new toy" },
+        error: null,
+      }),
     });
+
+    const addBtn = screen.getByText("event.add_item");
     await act(async () => {
-      fireEvent.click(saveBtn);
+      fireEvent.click(addBtn);
     });
-    expect(__mockUpdate).toHaveBeenCalled();
+
+    expect(__mockInsert).toHaveBeenCalled();
   });
 
-  it("handles wishlist save error", async () => {
+  it("handles wishlist add error", async () => {
     __mockRpc.mockReturnValue({
       maybeSingle: vi.fn().mockResolvedValue({
         data: { id: "evt-1", status: "open" },
@@ -782,33 +791,32 @@ describe("EventDetailsPage", () => {
       error: null,
     });
     __mockEq.mockResolvedValue({
-      data: [{ user_id: "user-1", wishlist: "book" }],
+      data: [{ user_id: "user-1" }],
       error: null,
     });
-    __mockUpdate.mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: "DB Error" }),
+    __mockOrder.mockResolvedValue({
+      data: [],
+      error: null,
+    });
+
+    __mockInsert.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: "DB Error" },
       }),
     });
+
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 
     render(<EventPage params={Promise.resolve(resolvedParams) as any} />);
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 100));
-    });
 
-    // Enter edit mode - try both since myWishlist might be empty if mock failed
-    const editBtn = await screen.findByText(/event\.(edit|add_item)/);
-    fireEvent.click(editBtn);
-
-    const input = await screen.findByPlaceholderText(
-      "event.wishlist_placeholder",
-    );
+    const input = await screen.findByPlaceholderText("event.wishlist_placeholder");
     fireEvent.change(input, { target: { value: "toy" } });
-    const saveBtn = screen.getByText("common.save");
+
+    const addBtn = screen.getByText("event.add_item");
     await act(async () => {
-      fireEvent.click(saveBtn);
-      await new Promise((r) => setTimeout(r, 0));
+      fireEvent.click(addBtn);
     });
 
     expect(alertSpy).toHaveBeenCalled();

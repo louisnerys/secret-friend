@@ -42,7 +42,7 @@ describe("useEventDrawController", () => {
     const mockUser = { id: "user-1" };
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockGetSession.mockResolvedValue({
-      data: { session: { user: mockUser } },
+      data: { session: { user: mockUser, access_token: "mock-token" } },
       error: null,
     });
 
@@ -51,10 +51,9 @@ describe("useEventDrawController", () => {
     const mockPrivMsgs = [
       {
         id: "m1",
-        sender_id: "drawn-1",
-        receiver_id: "user-1",
-        text: "Hi",
+        is_mine: false,
         sender_display: "Alice",
+        text: "Hi",
       },
     ];
 
@@ -62,11 +61,13 @@ describe("useEventDrawController", () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === "vw_participants") return createMockChain(mockParts);
       if (table === "users") return createMockChain(mockDrawn);
-      if (table === "private_messages") return createMockChain(mockPrivMsgs);
       return createMockChain(null);
     });
 
-    mockRpc.mockResolvedValue({ data: mockPrivMsgs, error: null });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ messages: mockPrivMsgs }),
+    });
 
     const { result } = renderHook(() => useEventDrawController("evt-1"));
 
@@ -82,7 +83,7 @@ describe("useEventDrawController", () => {
     const mockUser = { id: "user-1" };
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockGetSession.mockResolvedValue({
-      data: { session: { user: mockUser } },
+      data: { session: { user: mockUser, access_token: "mock-token" } },
       error: null,
     });
 
@@ -92,30 +93,41 @@ describe("useEventDrawController", () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === "vw_participants") return createMockChain(mockParts);
       if (table === "users") return createMockChain({ name: "Alice" });
-      if (table === "private_messages") return createMockChain([]);
       return createMockChain(null);
     });
-    mockRpc.mockResolvedValue({ data: [], error: null });
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ messages: [] }),
+    });
 
     const { result } = renderHook(() => useEventDrawController("evt-1"));
     await waitFor(() => expect(result.current.loading).toBe(false), {
       timeout: 3000,
     });
 
-    result.current.setNewMessage("Hello");
+    act(() => {
+      result.current.setNewMessage("Hello");
+    });
 
     const e = { preventDefault: vi.fn() } as any;
-    await result.current.handleSendMessage(e);
+    await act(async () => {
+      await result.current.handleSendMessage(e);
+    });
 
     expect(e.preventDefault).toHaveBeenCalled();
-    expect(mockFrom).toHaveBeenCalledWith("private_messages");
+    expect(mockRpc).toHaveBeenCalledWith("send_anonymous_message", {
+      p_event_id: "evt-1",
+      p_text: "Hello",
+      p_to_drawer: false,
+    });
   });
 
   it("handles sending message error and realtime payload", async () => {
     const mockUser = { id: "user-1" };
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockGetSession.mockResolvedValue({
-      data: { session: { user: mockUser } },
+      data: { session: { user: mockUser, access_token: "mock-token" } },
       error: null,
     });
 
@@ -126,6 +138,11 @@ describe("useEventDrawController", () => {
       if (table === "vw_participants") return createMockChain(mockParts);
       if (table === "users") return createMockChain({ name: "Alice" });
       return createMockChain(null);
+    });
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ messages: [] }),
     });
 
     mockRpc.mockResolvedValue({
@@ -163,7 +180,7 @@ describe("useEventDrawController", () => {
     // Test payload
     if (onPayload) {
       onPayload({
-        new: { sender_id: "other", receiver_id: "user-1", text: "Hello" },
+        new: { id: "m-payload", event_id: "evt-1", sender_id: "other", recipient_id: "user-1", text: "Hello", created_at: new Date().toISOString() },
       });
     }
 
@@ -219,19 +236,17 @@ describe("useEventDrawController", () => {
     const mockUser = { id: "user-1" };
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null });
     mockGetSession.mockResolvedValue({
-      data: { session: { user: mockUser } },
+      data: { session: { user: mockUser, access_token: "mock-token" } },
       error: null,
     });
 
     const mockParts = [{ user_id: "user-1", drawn_id: "drawn-1" }];
-    // A message sent by the current user — exercises sender_display ternary "You" branch
     const selfMsg = [
       {
         id: "m1",
-        sender_id: "user-1",
-        receiver_id: "drawn-1",
+        is_mine: true,
+        sender_display: "Você",
         text: "Hi",
-        sender_display: "Me",
       },
     ];
 
@@ -239,21 +254,22 @@ describe("useEventDrawController", () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === "vw_participants") return createMockChain(mockParts);
       if (table === "users") return createMockChain({ name: "Alice" });
-      if (table === "private_messages") return createMockChain(selfMsg);
       return createMockChain(null);
     });
 
-    mockRpc.mockResolvedValue({ data: selfMsg, error: null });
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ messages: selfMsg }),
+    });
 
     const { result } = renderHook(() => useEventDrawController("evt-1"));
     await waitFor(() => expect(result.current.loading).toBe(false), {
       timeout: 3000,
     });
 
-    // The self-message should get sender_display = 'You'
     const selfFormatted = result.current.messages.find(
-      (m: any) => m.sender_id === "user-1",
+      (m: any) => m.is_mine === true,
     );
-    expect(selfFormatted?.sender_display).toBe("You");
+    expect(selfFormatted?.sender_display).toBe("Você");
   });
 });

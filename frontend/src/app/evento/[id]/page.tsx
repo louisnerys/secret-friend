@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useEventDetailsController } from "@/presentation/controllers/useEventDetailsController";
+import BottomNav from "@/components/BottomNav";
 
 import { User, Event, Participant, Message, ExclusionGroup } from "@/lib/types";
 
@@ -56,6 +57,11 @@ export default function EventDetalhes(props: EventPageProps) {
     setMyWishlist,
     isEditingWishlist,
     setIsEditingWishlist,
+    wishlistItems,
+    newWishlistItem,
+    setNewWishlistItem,
+    handleAddWishlistItem,
+    handleDeleteWishlistItem,
     copySuccess,
     router,
     handleJoin,
@@ -188,77 +194,86 @@ export default function EventDetalhes(props: EventPageProps) {
         {/* Wishlist */}
         {isParticipant && event.status === "open" && (
           <section className="space-y-4">
-            <div className="flex justify-between items-end">
-              <h2 className="font-headline text-xl text-primary">
-                {t("event.my_wishlist")}
-              </h2>
-              {!isEditingWishlist && (
-                <button
-                  onClick={() => setIsEditingWishlist(true)}
-                  className="text-primary font-bold text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
-                >
-                  <MSO size={18}>{myWishlist ? "edit" : "add_circle"}</MSO>
-                  {myWishlist ? t("event.edit") : t("event.add_item")}
-                </button>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <h2 className="font-headline text-xl text-primary">
+                  {t("event.my_wishlist")}
+                </h2>
+                <span className="bg-secondary-container text-on-secondary-container text-xs font-bold px-2.5 py-0.5 rounded-full">
+                  {wishlistItems.length}/5
+                </span>
+              </div>
+            </div>
+
+            {/* List of current wishlist items */}
+            <div className="grid grid-cols-1 gap-3">
+              {wishlistItems.length > 0 ? (
+                wishlistItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-surface-container-lowest p-4 rounded-xl flex items-center justify-between shadow-sm border-l-4 border-secondary transition-all hover:scale-[1.01]"
+                  >
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center flex-shrink-0 text-on-secondary-fixed"
+                        aria-hidden="true"
+                      >
+                        <MSO size={18}>card_giftcard</MSO>
+                      </div>
+                      <p className="font-bold text-on-surface truncate pr-2">
+                        {item.description}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteWishlistItem(item.id)}
+                      className="text-on-surface-variant hover:text-primary hover:bg-primary-container/20 p-2 rounded-full transition-colors flex items-center justify-center"
+                      aria-label={`${t("common.delete")} ${item.description}`}
+                      title={t("common.delete")}
+                    >
+                      <MSO size={20}>delete</MSO>
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="border-2 border-dashed border-outline-variant p-8 text-center rounded-xl font-body text-sm text-on-surface-variant flex flex-col items-center gap-2">
+                  <MSO size={32} className="text-outline-variant">gift_card</MSO>
+                  <p>{t("event.wishlist_empty")}</p>
+                </div>
               )}
             </div>
-            {isEditingWishlist ? (
-              <div className="space-y-4">
-                <div className="relative group">
-                  <textarea
-                    value={myWishlist}
-                    onChange={(e) => setMyWishlist(e.target.value)}
-                    placeholder={t("event.wishlist_placeholder")}
-                    aria-label={t("event.wishlist_placeholder")}
-                    rows={3}
-                    className="w-full bg-surface-container-highest border-none rounded-lg px-4 py-4 focus:ring-0 focus:bg-surface-container-lowest outline-none transition-all duration-300 placeholder:text-on-surface-variant/40 resize-none text-on-surface"
-                  />
-                  <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary transition-all duration-500 group-focus-within:w-full" />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleSaveWishlist}
-                    className="bg-primary text-on-primary font-bold py-2.5 px-6 rounded-full shadow-[0_4px_12px_rgba(122,0,26,0.2)]"
-                  >
-                    {t("common.save")}
-                  </button>
-                  <button
-                    onClick={() => setIsEditingWishlist(false)}
-                    className="text-on-surface-variant font-medium py-2.5 px-6 rounded-full border border-outline-variant hover:bg-surface-container"
-                  >
-                    {t("common.cancel")}
-                  </button>
-                </div>
-              </div>
+
+            {/* Add item inline form */}
+            {wishlistItems.length < 5 ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (newWishlistItem.trim()) {
+                    handleAddWishlistItem(newWishlistItem);
+                  }
+                }}
+                className="flex items-center"
+              >
+                <input
+                  type="text"
+                  value={newWishlistItem}
+                  onChange={(e) => setNewWishlistItem(e.target.value)}
+                  placeholder={t("event.wishlist_placeholder")}
+                  aria-label={t("event.wishlist_placeholder")}
+                  className="w-full bg-surface-container-highest border border-outline-variant/30 rounded-l-full py-3 px-5 text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:border-primary transition-all text-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={!newWishlistItem.trim()}
+                  className="bg-primary text-on-primary rounded-r-full font-bold px-6 py-3 flex items-center gap-1 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm flex-shrink-0"
+                >
+                  <MSO size={18}>add</MSO>
+                  {t("event.add_item")}
+                </button>
+              </form>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {myWishlist ? (
-                  myWishlist
-                    .split("\n")
-                    .filter(Boolean)
-                    .map((item: string, i: number) => (
-                      <div
-                        key={i}
-                        className="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between shadow-sm border-l-4 border-secondary"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center"
-                            aria-hidden="true"
-                          >
-                            <MSO size={18}>card_giftcard</MSO>
-                          </div>
-                          <p className="font-bold text-on-surface">{item}</p>
-                        </div>
-                        <MSO size={20}>more_vert</MSO>
-                      </div>
-                    ))
-                ) : (
-                  <p className="italic text-on-surface-variant text-sm p-4 bg-surface-container-low rounded-xl">
-                    {t("event.wishlist_empty")}
-                  </p>
-                )}
-              </div>
+              <p className="text-xs text-on-surface-variant italic text-center bg-surface-container-low py-2 rounded-lg">
+                {t("event.wishlist_limit_reached", { max: 5 })}
+              </p>
             )}
           </section>
         )}
@@ -591,40 +606,13 @@ export default function EventDetalhes(props: EventPageProps) {
       </main>
 
       {/* ── Bottom Nav ── */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-lg flex justify-around items-center px-4 pb-6 pt-2 shadow-[0_-8px_24px_rgba(26,28,26,0.04)] rounded-t-3xl transition-colors">
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-full p-3 transition-all"
-        >
-          <MSO fill>event</MSO>
-          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
-            {t("event.nav_events")}
-          </span>
-        </button>
-        <button className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors">
-          <MSO>card_giftcard</MSO>
-          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
-            {t("event.nav_list")}
-          </span>
-        </button>
-        {isParticipant && event.status === "drawn" && (
-          <button
-            onClick={() => router.push(`/evento/${id}/draw`)}
-            className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors"
-          >
-            <MSO>auto_awesome</MSO>
-            <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
-              {t("event.nav_draw")}
-            </span>
-          </button>
-        )}
-        <button className="flex flex-col items-center justify-center text-on-surface-variant/50 p-3 hover:text-primary transition-colors">
-          <MSO>person</MSO>
-          <span className="font-label text-[10px] uppercase tracking-widest font-bold mt-1">
-            {t("event.nav_profile")}
-          </span>
-        </button>
-      </nav>
+      <BottomNav
+        context="event"
+        activeTab="event-details"
+        eventId={id}
+        isParticipant={isParticipant}
+        isDrawn={event.status === "drawn"}
+      />
     </div>
   );
 }
