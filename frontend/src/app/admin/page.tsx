@@ -1,6 +1,32 @@
 "use client";
 
 import { useAdminController } from "@/presentation/controllers/useAdminController";
+import BottomNav from "@/components/BottomNav";
+
+const MSO = ({
+  children,
+  fill,
+  size = 22,
+  ariaHidden = true,
+  className,
+}: {
+  children: string;
+  fill?: boolean;
+  size?: number;
+  ariaHidden?: boolean;
+  className?: string;
+}) => (
+  <span
+    className={`material-symbols-outlined select-none ${className || ""}`}
+    aria-hidden={ariaHidden}
+    style={{
+      fontSize: size,
+      fontVariationSettings: fill ? "'FILL' 1" : "'FILL' 0",
+    }}
+  >
+    {children}
+  </span>
+);
 
 export default function AdminDashboard() {
   const { t, metrics, loading, error, router, handleMakeMeAdmin } =
@@ -9,12 +35,14 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div
-        className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center transition-colors"
+        className="min-h-screen bg-surface flex items-center justify-center transition-colors"
         aria-live="polite"
       >
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full mb-4"></div>
-          <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded"></div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="font-label text-on-surface-variant uppercase tracking-widest text-xs">
+            {t("common.loading")}
+          </p>
         </div>
       </div>
     );
@@ -22,47 +50,34 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6 transition-colors">
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 max-w-md w-full text-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center p-6 transition-colors">
+        <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/30 max-w-md w-full text-center">
           <div
-            className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-6"
+            className="w-16 h-16 bg-error-container/20 text-error rounded-full flex items-center justify-center mx-auto mb-6"
             aria-hidden="true"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-8 h-8"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+            <MSO size={32}>error</MSO>
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+          <h2 className="text-2xl font-display font-bold text-on-surface mb-2">
             {t("admin.access_denied")}
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-2">
+          <p className="text-on-surface-variant text-sm mb-4 font-body">
             {t("admin.no_permission")}
           </p>
-          <p className="text-sm text-slate-500 dark:text-slate-500 mb-8 font-mono bg-slate-100 dark:bg-slate-900 p-2 rounded">
+          <p className="text-xs text-on-surface-variant mb-8 font-mono bg-surface-container-high p-3 rounded-lg break-all">
             ({error})
           </p>
 
           <div className="flex flex-col gap-3">
             <button
               onClick={() => router.push("/dashboard")}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+              className="w-full bg-primary hover:bg-primary/95 text-on-primary font-display font-bold py-3 px-6 rounded-full transition-colors active:scale-95 shadow-md shadow-primary/10"
             >
               {t("admin.back_dashboard")}
             </button>
             <button
               onClick={handleMakeMeAdmin}
-              className="w-full bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 font-medium py-3 px-4 rounded-xl transition-colors"
+              className="w-full bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/30 font-display font-bold py-3 px-6 rounded-full transition-colors active:scale-95"
             >
               {t("admin.how_to_admin")}
             </button>
@@ -75,92 +90,76 @@ export default function AdminDashboard() {
   if (!metrics) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors pb-12">
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 md:px-12 py-4 flex items-center justify-between transition-colors">
+    <div className="min-h-screen bg-surface transition-colors pb-32">
+      <header className="bg-surface-container-lowest/80 backdrop-blur-xl border-b border-outline-variant/20 px-6 md:px-12 py-4 flex items-center justify-between transition-colors sticky top-0 z-50 shadow-sm shadow-black/5">
         <button
           onClick={() => router.push("/dashboard")}
-          className="flex items-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-medium"
+          className="flex items-center text-on-surface-variant hover:text-primary transition-colors font-bold text-sm"
           aria-label={t("admin.back")}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="w-5 h-5 mr-1"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-            />
-          </svg>
+          <MSO className="mr-1">arrow_back</MSO>
           {t("admin.back")}
         </button>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="w-6 h-6 text-primary dark:text-primary-400"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-            />
-          </svg>
+        <h1 className="text-xl font-display font-bold text-primary flex items-center gap-2">
+          <MSO fill className="text-primary">monitoring</MSO>
           {t("admin.title")}
         </h1>
-        <div className="w-20"></div>
+        <div className="w-20 hidden md:block"></div>
       </header>
 
       <main className="p-6 md:p-12 max-w-6xl mx-auto space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm transition-colors relative overflow-hidden">
+          {/* Card 1: Active Users */}
+          <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
             <div
-              className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"
+              className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:scale-110 transition-transform"
               aria-hidden="true"
-            ></div>
-            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-              {t("admin.active_users")}
-            </h3>
-            <p className="text-4xl font-black text-slate-800 dark:text-slate-100">
+            />
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider">
+                {t("admin.active_users")}
+              </h3>
+              <MSO className="text-primary/40 group-hover:text-primary transition-colors">group</MSO>
+            </div>
+            <p className="text-4xl font-display font-black text-primary">
               {metrics.mau}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm transition-colors relative overflow-hidden">
+          {/* Card 2: Messages */}
+          <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
             <div
-              className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-indigo-100 dark:bg-indigo-900/20 rounded-full blur-2xl"
+              className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-secondary-container/20 rounded-full blur-2xl group-hover:scale-110 transition-transform"
               aria-hidden="true"
-            ></div>
-            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-              {t("admin.messages_24h")}
-            </h3>
-            <p className="text-4xl font-black text-slate-800 dark:text-slate-100">
+            />
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider">
+                {t("admin.messages_24h")}
+              </h3>
+              <MSO className="text-secondary/40 group-hover:text-secondary transition-colors">chat_bubble</MSO>
+            </div>
+            <p className="text-4xl font-display font-black text-primary">
               {metrics.messages_24h}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm transition-colors relative overflow-hidden">
+          {/* Card 3: Engagement */}
+          <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
             <div
-              className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-green-100 dark:bg-green-900/20 rounded-full blur-2xl"
+              className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-tertiary-container/20 rounded-full blur-2xl group-hover:scale-110 transition-transform"
               aria-hidden="true"
-            ></div>
-            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-              {t("admin.engagement")}
-            </h3>
-            <p className="text-4xl font-black text-slate-800 dark:text-slate-100">
+            />
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xs font-label font-bold text-on-surface-variant uppercase tracking-wider">
+                {t("admin.engagement")}
+              </h3>
+              <MSO className="text-tertiary/40 group-hover:text-tertiary transition-colors">stars</MSO>
+            </div>
+            <p className="text-4xl font-display font-black text-primary mb-1">
               {metrics.engagement.rate_percentage}%
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">
-              <span className="text-slate-700 dark:text-slate-300">
+            <p className="text-xs text-on-surface-variant font-medium">
+              <span className="text-on-surface">
                 {t("admin.with_wishlist", {
                   count: metrics.engagement.with_wishlist,
                   total: metrics.engagement.total_participants,
@@ -170,57 +169,62 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-sm transition-colors">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+        {/* Event Status section */}
+        <section className="bg-surface-container-lowest border border-outline-variant/20 rounded-3xl p-6 md:p-8 shadow-sm">
+          <h2 className="text-xl font-display font-bold text-primary mb-6 border-b border-outline-variant/10 pb-4 flex items-center gap-2">
+            <MSO fill>analytics</MSO>
             {t("admin.event_status")}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50">
+            {/* Open Events */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-outline-variant/10 shadow-sm transition-all hover:bg-surface-container">
               <div
-                className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 flex items-center justify-center font-bold text-xl"
+                className="w-12 h-12 rounded-xl bg-secondary-container/20 text-secondary flex items-center justify-center font-display font-bold text-xl"
                 aria-hidden="true"
               >
                 {metrics.events.open}
               </div>
               <div>
-                <span className="block font-semibold text-slate-800 dark:text-slate-200">
+                <span className="block font-headline font-bold text-on-surface text-sm">
                   {t("admin.open")}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] text-on-surface-variant/80 font-body">
                   {t("admin.waiting_draw")}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50">
+            {/* Drawn Events */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-outline-variant/10 shadow-sm transition-all hover:bg-surface-container">
               <div
-                className="w-12 h-12 rounded-xl bg-primary-container text-primary flex items-center justify-center font-bold text-xl"
+                className="w-12 h-12 rounded-xl bg-primary-container/20 text-primary flex items-center justify-center font-display font-bold text-xl"
                 aria-hidden="true"
               >
                 {metrics.events.drawn}
               </div>
               <div>
-                <span className="block font-semibold text-slate-800 dark:text-slate-200">
+                <span className="block font-headline font-bold text-on-surface text-sm">
                   {t("admin.drawn")}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] text-on-surface-variant/80 font-body">
                   {t("admin.draw_performed")}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50">
+            {/* Finished Events */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-outline-variant/10 shadow-sm transition-all hover:bg-surface-container">
               <div
-                className="w-12 h-12 rounded-xl bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xl"
+                className="w-12 h-12 rounded-xl bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-display font-bold text-xl"
                 aria-hidden="true"
               >
                 {metrics.events.finished}
               </div>
               <div>
-                <span className="block font-semibold text-slate-800 dark:text-slate-200">
+                <span className="block font-headline font-bold text-on-surface text-sm">
                   {t("admin.finished")}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] text-on-surface-variant/80 font-body">
                   {t("admin.event_concluded")}
                 </span>
               </div>
@@ -228,6 +232,9 @@ export default function AdminDashboard() {
           </div>
         </section>
       </main>
+
+      {/* ── Bottom Nav ── */}
+      <BottomNav context="global" activeTab="admin" isAdmin={true} />
     </div>
   );
 }

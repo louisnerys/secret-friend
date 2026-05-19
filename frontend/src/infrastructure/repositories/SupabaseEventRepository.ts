@@ -157,23 +157,33 @@ export class SupabaseEventRepository implements IEventRepository {
     userId: string,
     drawnId: string | null,
   ): Promise<{ data: any; error: any }> {
-    let query = supabase
-      .from("private_messages")
-      .select("*")
-      .eq("event_id", eventId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return { data: null, error: new Error("Unauthorized") };
+      }
 
-    if (drawnId) {
-      query = query.or(
-        `and(sender_id.eq.${userId},receiver_id.eq.${drawnId}),and(sender_id.eq.${drawnId},receiver_id.eq.${userId}),receiver_id.eq.${userId}`,
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-anonymous-messages?event_id=${eventId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-    } else {
-      query = query.eq("receiver_id", userId);
-    }
 
-    const { data, error } = await query.order("created_at", {
-      ascending: true,
-    });
-    return { data, error };
+      if (!res.ok) {
+        const errText = await res.text();
+        return { data: null, error: new Error(errText || "Failed to fetch private messages") };
+      }
+
+      const body = await res.json();
+      return { data: body.messages, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
   }
 
   async sendAnonymousMessage(
@@ -191,6 +201,42 @@ export class SupabaseEventRepository implements IEventRepository {
 
   async getAdminMetrics(): Promise<{ data: any; error: any }> {
     return supabase.rpc("get_admin_metrics");
+  }
+
+  async fetchWishlistItems(
+    eventId: string,
+    userId: string,
+  ): Promise<{ data: any; error: any }> {
+    const { data, error } = await supabase
+      .from("wishlist_items")
+      .select("*")
+      .eq("event_id", eventId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
+    return { data, error };
+  }
+
+  async addWishlistItem(
+    eventId: string,
+    userId: string,
+    description: string,
+  ): Promise<{ data: any; error: any }> {
+    const { data, error } = await supabase
+      .from("wishlist_items")
+      .insert({ event_id: eventId, user_id: userId, description })
+      .select()
+      .single();
+    return { data, error };
+  }
+
+  async deleteWishlistItem(
+    itemId: string,
+  ): Promise<{ error: any }> {
+    const { error } = await supabase
+      .from("wishlist_items")
+      .delete()
+      .eq("id", itemId);
+    return { error };
   }
 }
 

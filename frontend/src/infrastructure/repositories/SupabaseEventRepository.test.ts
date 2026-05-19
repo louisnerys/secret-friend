@@ -215,28 +215,31 @@ describe("SupabaseEventRepository", () => {
     expect(mockFrom).toHaveBeenCalledWith("exclusion_group_members");
   });
 
-  it("getPrivateMessages uses correct filters with drawnId", async () => {
-    const mockChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null }),
-    };
-    mockFrom.mockReturnValue(mockChain as any);
-    await repo.getPrivateMessages("e1", "u1", "u2");
-    expect(mockChain.or).toHaveBeenCalled();
-  });
+  it("getPrivateMessages fetches from get-anonymous-messages edge function", async () => {
+    vi.spyOn(supabase.auth, "getSession").mockResolvedValue({
+      data: { session: { access_token: "mock-token" } as any },
+      error: null,
+    });
 
-  it("getPrivateMessages uses correct filters without drawnId", async () => {
-    const mockChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: [], error: null }),
-    };
-    mockFrom.mockReturnValue(mockChain as any);
-    await repo.getPrivateMessages("e1", "u1", null);
-    expect(mockChain.eq).toHaveBeenCalledWith("receiver_id", "u1");
+    const mockMessages = [{ id: "m1", text: "hello", is_mine: true, sender_display: "Você" }];
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ messages: mockMessages }),
+    });
+
+    const result = await repo.getPrivateMessages("e1", "u1", "u2");
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/functions/v1/get-anonymous-messages?event_id=e1"),
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({
+          Authorization: "Bearer mock-token",
+        }),
+      })
+    );
+    expect(result.data).toEqual(mockMessages);
+    expect(result.error).toBeNull();
   });
 
   it("sendAnonymousMessage calls rpc", async () => {
