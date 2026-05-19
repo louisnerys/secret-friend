@@ -15,14 +15,16 @@ const MSO = ({
   fill,
   size = 22,
   ariaHidden = true,
+  className,
 }: {
   children: string;
   fill?: boolean;
   size?: number;
   ariaHidden?: boolean;
+  className?: string;
 }) => (
   <span
-    className="material-symbols-outlined"
+    className={`material-symbols-outlined select-none ${className || ""}`}
     aria-hidden={ariaHidden}
     style={{
       fontSize: size,
