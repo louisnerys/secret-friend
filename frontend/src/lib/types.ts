@@ -18,11 +18,20 @@ export interface Event {
   creator_id: string;
 }
 
+export interface WishlistItem {
+  id: string;
+  event_id: string;
+  user_id: string;
+  description: string;
+  created_at?: string;
+}
+
 export interface Participant {
   user_id: string;
   event_id?: string;
   drawn_id?: string;
   wishlist?: string;
+  wishlist_items?: WishlistItem[];
   users?:
     | {
         name: string;
@@ -51,8 +60,8 @@ export interface Message {
 export interface PrivateMessage {
   id: string;
   event_id: string;
-  sender_id: string;
-  receiver_id: string;
+  sender_id?: string;
+  recipient_id?: string;
   text: string;
   chat_type: "drawn" | "drawer";
   sender_display: string;

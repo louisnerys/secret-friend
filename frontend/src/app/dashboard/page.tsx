@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import BottomNav from "@/components/BottomNav";
 import { Event } from "@/lib/types";
 
 interface UserProfile {
@@ -332,50 +333,7 @@ export default function Dashboard() {
       </main>
 
       {/* ── Bottom Nav ── */}
-      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-surface/90 backdrop-blur-2xl z-50 rounded-t-3xl shadow-[0_-8px_24px_rgba(26,28,26,0.06)]">
-        <div className="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-5 py-2 transition-all duration-300">
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}
-            aria-hidden="true"
-          >
-            celebration
-          </span>
-          <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">
-            {t("dashboard.nav_events")}
-          </span>
-        </div>
-        <Link
-          href="/admin"
-          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
-        >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: 22 }}
-            aria-hidden="true"
-          >
-            auto_awesome
-          </span>
-          <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">
-            {t("common.admin")}
-          </span>
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center text-on-surface-variant/50 p-2 hover:text-primary transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-lg"
-        >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: 22 }}
-            aria-hidden="true"
-          >
-            person
-          </span>
-          <span className="font-label text-[10px] uppercase tracking-widest font-semibold mt-1">
-            {t("dashboard.nav_profile")}
-          </span>
-        </button>
-      </nav>
+      <BottomNav context="global" activeTab="events" isAdmin={profile.is_admin} />
     </div>
   );
 }

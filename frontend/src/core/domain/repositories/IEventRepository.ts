@@ -36,4 +36,16 @@ export interface IEventRepository {
     toDrawer: boolean,
   ): Promise<{ error: any }>;
   getAdminMetrics(): Promise<{ data: any; error: any }>;
+  fetchWishlistItems(
+    eventId: string,
+    userId: string,
+  ): Promise<{ data: any; error: any }>;
+  addWishlistItem(
+    eventId: string,
+    userId: string,
+    description: string,
+  ): Promise<{ data: any; error: any }>;
+  deleteWishlistItem(
+    itemId: string,
+  ): Promise<{ error: any }>;
 }

@@ -27,7 +27,33 @@ export function useEventDetailsController(eventId: string) {
   const [myWishlist, setMyWishlist] = useState("");
   const [isEditingWishlist, setIsEditingWishlist] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const [newWishlistItem, setNewWishlistItem] = useState("");
   const router = useRouter();
+
+  const handleAddWishlistItem = async (description: string) => {
+    if (!user || !description.trim()) return;
+    if (wishlistItems.length >= 5) {
+      alert(t("event.wishlist_limit_reached", { max: 5 }));
+      return;
+    }
+    const { data, error } = await eventRepository.addWishlistItem(eventId, user.id, description.trim());
+    if (!error && data) {
+      setWishlistItems(prev => [...prev, data]);
+      setNewWishlistItem("");
+    } else {
+      alert(t("event.wishlist_save_error") + (error ? ": " + error.message : ""));
+    }
+  };
+
+  const handleDeleteWishlistItem = async (itemId: string) => {
+    const { error } = await eventRepository.deleteWishlistItem(itemId);
+    if (!error) {
+      setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+    } else {
+      alert(t("event.wishlist_delete_error") + (error ? ": " + error.message : ""));
+    }
+  };
 
   const fetchData = useCallback(async () => {
     const { data: authData } = await supabase.auth.getUser();
@@ -58,6 +84,11 @@ export function useEventDetailsController(eventId: string) {
 
     if (data.mMsgs) setMuralMsgs(data.mMsgs as unknown as Partial<Message>[]);
     if (data.groups) setExclusionGroups(data.groups as ExclusionGroup[]);
+
+    const { data: items } = await eventRepository.fetchWishlistItems(eventId, authData.user.id);
+    if (items) {
+      setWishlistItems(items);
+    }
 
     setLoading(false);
   }, [eventId, router, t]);
@@ -181,6 +212,12 @@ export function useEventDetailsController(eventId: string) {
     setMyWishlist,
     isEditingWishlist,
     setIsEditingWishlist,
+    wishlistItems,
+    setWishlistItems,
+    newWishlistItem,
+    setNewWishlistItem,
+    handleAddWishlistItem,
+    handleDeleteWishlistItem,
     copySuccess,
     router,
     handleJoin,

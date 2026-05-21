@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
+import BottomNav from "@/components/BottomNav";
 
 export default function NewEvent() {
   const { t } = useTranslation();
@@ -12,7 +13,26 @@ export default function NewEvent() {
   const [revealDate, setRevealDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const query = supabase.from("users").select("is_admin");
+        if (query && typeof query.eq === "function") {
+          const { data: userProfile } = await query
+            .eq("id", session.user.id)
+            .single();
+          if (userProfile?.is_admin) {
+            setIsAdmin(true);
+          }
+        }
+      }
+    };
+    checkAdmin();
+  }, []);
 
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,6 +235,7 @@ export default function NewEvent() {
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <circle
                       className="opacity-25"
@@ -263,49 +284,7 @@ export default function NewEvent() {
       </main>
 
       {/* ── Bottom Nav ── */}
-      <nav className="fixed bottom-0 left-0 w-full z-50 px-8 pb-6 pt-2 bg-surface/90 backdrop-blur-2xl shadow-[0_-8px_24px_rgba(26,28,26,0.06)]">
-        <div className="flex justify-around items-center w-full max-w-lg mx-auto">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="flex flex-col items-center justify-center text-primary bg-primary/5 rounded-full px-4 py-2"
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}
-              aria-hidden="true"
-            >
-              celebration
-            </span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">
-              {t("dashboard.nav_events")}
-            </span>
-          </button>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 22 }}
-              aria-hidden="true"
-            >
-              group_add
-            </span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">
-              {t("common.invite")}
-            </span>
-          </button>
-          <button className="flex flex-col items-center justify-center text-on-surface-variant/50 px-4 py-2">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: 22 }}
-              aria-hidden="true"
-            >
-              person
-            </span>
-            <span className="font-label text-[11px] uppercase tracking-[0.05em] font-medium mt-1">
-              {t("dashboard.nav_profile")}
-            </span>
-          </button>
-        </div>
-      </nav>
+      <BottomNav context="global" activeTab="new-event" isAdmin={isAdmin} />
     </div>
   );
 }

@@ -139,10 +139,10 @@ describe("Dashboard", () => {
       single: vi.fn().mockResolvedValue({ data: { name: "A" }, error: null }),
     });
 
-    const { getByLabelText } = render(<Dashboard />);
+    const { getAllByLabelText } = render(<Dashboard />);
 
     await waitFor(async () => {
-      const logoutBtn = getByLabelText("common.logout");
+      const logoutBtn = getAllByLabelText("common.logout")[0];
       fireEvent.click(logoutBtn);
       expect(supabase.auth.signOut).toHaveBeenCalled();
     });
